@@ -45,6 +45,15 @@ template<int64_t F, int64_t T> auto in_range(region const& i)
             i.zf_ >= F && i.zf_ <= T && i.zt_ >= F && i.zt_ <= T ;
 }
 
+auto inner_regions(auto const& regions)
+{
+    std::vector<std::pair<bool, region>> vr;
+    for (auto& r : regions)
+        if (in_range<-50, 50>(r.second))
+            vr.emplace_back(r);
+    return vr;
+}
+
 template<int64_t F, int64_t T> auto to_off(int64_t x, int64_t y, int64_t z)
 {
     return (x - F) + ((y - F) * (T - F + 1)) + ((z - F) * (T - F + 1) * (T - F + 1));
@@ -119,6 +128,7 @@ int64_t pt2(auto const& in)
 int main()
 {
     auto in { get_input()};
-    std::cout << "pt1 = " << pt1(in) << "\n";
-    std::cout << "pt2 = " << pt2(in) << "\n";
+    std::cout << "pt1  = " << pt1(in) << "\n";
+    std::cout << "pt1a = " << pt2(inner_regions(in)) << "\n";
+    std::cout << "pt2  = " << pt2(in) << "\n";
 }
