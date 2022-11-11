@@ -13,7 +13,7 @@ FetchContent_Declare( ctre
 FetchContent_MakeAvailable(ctre)
 find_package(Boost 1.80 REQUIRED)
 
-add_subdirectory(aoc0)
+add_subdirectory(aoc_test)
 #add_subdirectory(aoc1)
 #add_subdirectory(aoc2)
 #add_subdirectory(aoc3)

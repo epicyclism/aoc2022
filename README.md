@@ -1,7 +1,7 @@
 # aoc2022
 Advent Of Code 2022
 
-aoc0 is a placeholder, currently a solution to Day 22 from 2021.
+aoc_test contains some old solutions from previous years and isn't pertinent.
 
 Each new day of 2022 will get it's own directory. Builds should be good on MacOS, Windows and Linux. Using Monterey, MSVC 2022 and Ubuntu 22.04.
 
