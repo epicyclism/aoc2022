@@ -145,7 +145,7 @@ void add_edge_undirected(G& g, vertex_id_t from, vertex_id_t to, ARGS... args )
     add_edge(g, to, from, args...);
 }
 
-// helper for grid of weights storedd as a vector with a stride
+// helper for grid of weights stored as a vector with a stride
 //
 template<typename W>
 class weighted_grid

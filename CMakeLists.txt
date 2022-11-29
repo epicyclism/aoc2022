@@ -11,7 +11,8 @@ FetchContent_Declare( ctre
     GIT_TAG origin/main
     )
 FetchContent_MakeAvailable(ctre)
-find_package(Boost 1.80 REQUIRED)
+# uncomment when/if necessary!
+#find_package(Boost 1.80 REQUIRED)
 
 add_subdirectory(aoc_test)
 #add_subdirectory(aoc1)
