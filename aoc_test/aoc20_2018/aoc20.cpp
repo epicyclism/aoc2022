@@ -22,7 +22,7 @@ void add_edge_undirected(G& g, xvertex_id_t from, xvertex_id_t to, ARGS... args 
     add_edge(g, to, from, args...);
 }
 
-xvertex_id_t adj(xvertex_id_t v, char d)
+xvertex_id_t move(xvertex_id_t v, char d)
 {
 	switch(d)
 	{
@@ -41,14 +41,13 @@ xvertex_id_t adj(xvertex_id_t v, char d)
 	}
 }
 
-std::string_view parse_paren(std::string_view s, graph_t& g, xvertex_id_t v)
+std::string_view parse_rx(std::string_view s, graph_t& g, xvertex_id_t v)
 {
 	auto b { s.begin()};
 	auto e { s.end()};
 	xvertex_id_t vu { v };
 	while(b != e)
 	{
-//		std::cout << "\t" << *b << "\n";
 		switch(*b)
 		{
 			case 'N':
@@ -56,7 +55,7 @@ std::string_view parse_paren(std::string_view s, graph_t& g, xvertex_id_t v)
 			case 'W':
 			case 'E':
 				{
-					xvertex_id_t vt = adj(vu, *b);
+					xvertex_id_t vt = move(vu, *b);
 					add_edge_undirected(g, vu, vt);
 					vu = vt;
 				}
@@ -65,17 +64,19 @@ std::string_view parse_paren(std::string_view s, graph_t& g, xvertex_id_t v)
 				vu = v;
 				break;
 			case '(':
-				b = parse_paren({b + 1, e}, g, vu).begin();
+				b = parse_rx({b + 1, e}, g, vu).begin();
 				break;
 			case ')':
 				return {b, e};
+			case '^':
+			case '$':
+				break;
 			default:
 				std::cout << "CANT HAPPEN (" << *b << ")\n";
 				break;
 		}
 		++b;
 	}
-	std::cout << "parse error, no matching close paren.\n";
 	return {b, e};
 }
 
@@ -83,36 +84,7 @@ graph_t parse_rx(std::string_view s)
 {
 	graph_t g;
 	xvertex_id_t v { 0, 0};
-	auto b { s.begin()};
-	auto e { s.end()};
-	while(b != e)
-	{
-//		std::cout << *b << "\n";
-		switch(*b)
-		{
-			case 'N':
-			case 'S':
-			case 'W':
-			case 'E':
-				{
-					xvertex_id_t vt = adj(v, *b);
-					add_edge_undirected(g, v, vt);
-					v = vt;
-				}
-				break;
-			case '^':
-				break;
-			case '$':
-				break;
-			case '(':
-				b = parse_paren({b + 1, e}, g, v).begin();
-				break;
-			default:
-				std::cout << "CANT HAPPEN (" << *b << ")\n";
-				break;
-		}
-		++b;
-	}
+	parse_rx(s, g, v);
 	return g;
 }
 
