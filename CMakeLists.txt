@@ -16,7 +16,7 @@ FetchContent_MakeAvailable(ctre)
 
 add_subdirectory(aoc_test)
 add_subdirectory(aoc1)
-#add_subdirectory(aoc2)
+add_subdirectory(aoc2)
 #add_subdirectory(aoc3)
 #add_subdirectory(aoc4)
 #add_subdirectory(aoc5)
