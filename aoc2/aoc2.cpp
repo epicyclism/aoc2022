@@ -29,12 +29,14 @@ auto pt(auto const& in, auto& gt)
 
 int main()
 {
-    constexpr std::array gt1{ 4, 1, 7,
-                              8, 5, 2,
-                              3, 9, 6};
-    constexpr std::array gt2{ 3, 1, 2,
-                              4, 5, 6,
-                              8, 9, 7};
+    constexpr std::array gt1{ 
+                        //    R  P  S
+                              4, 1, 7, // R: D L W
+                              8, 5, 2, // P: W D L
+                              3, 9, 6};// S: L W D
+    constexpr std::array gt2{ 3, 1, 2, // L: S R P
+                              4, 5, 6, // D: R P S
+                              8, 9, 7};// W: P S R
 
     auto in { get_input()};
     std::cout << "pt1 = " << pt(in, gt1) << "\n";
