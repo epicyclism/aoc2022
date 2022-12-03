@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <numeric>
 
 auto get_input()
 {
@@ -21,14 +20,15 @@ int val(char c)
 auto pt1(auto const& in)
 {
     int sum { 0 };
-    std::string tmp { ' ', 1};
+    std::string tmp ;
     for(auto& s: in)
     {
         auto fs { s.substr(0, s.size()/2) };
         auto ss { s.substr(s.size()/2) };
         std::ranges::sort(fs);
         std::ranges::sort(ss);
-        std::ranges::set_intersection(fs, ss, tmp.begin());
+        tmp.clear();
+        std::ranges::set_intersection(fs, ss, std::back_inserter(tmp));
         sum += val(tmp.front());
     }
     return sum;
