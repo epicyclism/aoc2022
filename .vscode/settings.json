@@ -4,6 +4,9 @@
         "iostream": "cpp",
         "string": "cpp",
         "string_view": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "__locale": "cpp",
+        "ios": "cpp",
+        "concepts": "cpp"
     }
 }
