@@ -34,14 +34,13 @@ bool contains(ft_t r)
 
 bool overlaps(ft_t r)
 {
-    return r.t1_>= r.t2_ && r.f1_ <= r.t2_ ||
-        r.t2_ >= r.f1_ && r.f2_ <= r.t1_ ;
+    return !(r.t1_< r.f2_ || r.t2_ < r.f1_) ;
 }
 
 int main()
 {
     auto in {get_input()};
 
-    std::cout << "pt1 = " << std::ranges::count_if(in, [](auto& r){return contains(r);}) << "\n";
-    std::cout << "pt2 = " << std::ranges::count_if(in, [](auto& r){return overlaps(r);}) << "\n";
+    std::cout << "pt1 = " << std::ranges::count_if(in, contains) << "\n";
+    std::cout << "pt2 = " << std::ranges::count_if(in, overlaps) << "\n";
 }
