@@ -15,7 +15,7 @@ struct move
 
 auto get_input()
 {
-    std::vector<std::deque<char>> stacks;
+    std::vector<std::vector<char>> stacks;
     std::string ln;
     while(std::getline(std::cin, ln))
     {
@@ -26,9 +26,11 @@ auto get_input()
             auto col = std::distance(ln.begin(), m.begin()) / 4;
             if (stacks.size() < col + 1)
                 stacks.resize(col + 1);
-            stacks[col].push_front(m.view()[1]);
+            stacks[col].push_back(m.view()[1]);
         }
     }
+    for (auto& s : stacks)
+        std::ranges::reverse(s);
     std::vector<move> moves;
     while (std::getline(std::cin, ln))
     {
