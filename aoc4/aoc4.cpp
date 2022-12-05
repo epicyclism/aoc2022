@@ -20,8 +20,8 @@ auto get_input()
     std::string ln;
     while(std::getline(std::cin, ln))
     {
-        auto[m, f1, t1, f2, t2] = ctre::match<rx>(ln);
-        rv.emplace_back(sv_to_t<int>(f1.to_view()), sv_to_t<int>(t1.to_view()), sv_to_t<int>(f2.to_view()), sv_to_t<int>(t2.to_view()));
+        auto[m, f1, t1, f2, t2] = ctre::match<R"((\d+)-(\d+),(\d+)-(\d+))">(ln);
+        rv.emplace_back(sv_to_t<int>(f1), sv_to_t<int>(t1), sv_to_t<int>(f2), sv_to_t<int>(t2));
     }
     return rv;
 }

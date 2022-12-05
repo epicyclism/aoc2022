@@ -9,11 +9,10 @@
 auto get_input()
 {
     std::vector<std::pair<char, char>> rv;
-    constexpr auto rx = ctll::fixed_string{ R"(([ABC]) ([XYZ]))" };
     std::string ln;
     while(std::getline(std::cin, ln))
     {
-        auto[m, a, x] = ctre::match<rx>(ln);
+        auto[m, a, x] = ctre::match<R"(([ABC]) ([XYZ]))">(ln);
         rv.emplace_back(a.to_view()[0], x.to_view()[0]);
     }
     return rv;
