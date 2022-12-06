@@ -2,9 +2,11 @@ cmake_minimum_required (VERSION 3.21)
 include(FetchContent)
 project (aoc2022)
 
-set_property(GLOBAL PROPERTY CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 FetchContent_Declare( ctre 
     GIT_REPOSITORY https://github.com/hanickadot/compile-time-regular-expressions

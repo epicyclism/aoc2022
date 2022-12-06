@@ -1,35 +1,36 @@
 #include <iostream>
 #include <string>
-#include <vector>
-#include <algorithm>
 
-#include <ctre_inc.h>
-
-auto get_input()
+template<typename I> bool all_unique(I b, I e)
 {
-    std::vector<std::string> in;
-    std::string ln;
-    while(std::getline(std::cin, ln))
+    for(;b != e; ++b)
     {
-        in.emplace_back(ln);
+        for(auto bb {b + 1}; bb != e; ++bb)
+            if ( *bb == *b)
+                return false;
     }
-    return in;
+    return true;
 }
 
-auto pt1(auto const& in)
+template<size_t N> auto ptN(auto const& in)
 {
-    return in.size();
-}
-
-auto pt2(auto const& in)
-{
-    return in.size();
+    auto it0 = in.begin();
+    auto itN = in.begin() + N;
+    while(itN != in.end())
+    {
+        if(all_unique(it0, itN))
+            break;
+        ++it0;
+        ++itN;
+    }
+    return itN - in.begin();
 }
 
 int main()
 {
-    auto in {get_input()};
-
-    std::cout << "pt1 = " << pt1(in) << "\n";
-    std::cout << "pt2 = " << pt2(in) << "\n";
+    std::string in;
+    std::getline(std::cin, in);
+ 
+    std::cout << "pt1 = " << ptN<4>(in) << "\n";
+    std::cout << "pt2 = " << ptN<14>(in) << "\n";
 }
