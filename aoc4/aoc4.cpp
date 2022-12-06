@@ -16,7 +16,6 @@ struct ft_t
 auto get_input()
 {
     std::vector<ft_t> rv;
-    constexpr auto rx = ctll::fixed_string{ R"((\d+)-(\d+),(\d+)-(\d+))" };
     std::string ln;
     while(std::getline(std::cin, ln))
     {
