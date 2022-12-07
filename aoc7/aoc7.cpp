@@ -7,16 +7,16 @@
 
 #include <ctre_inc.h>
 
-using ds_t = std::map<std::string, uint64_t>;
+using ds_t = std::map<std::string, int>;
 
-uint64_t enumerate_dir(std::string const& dir, ds_t& d)
+int enumerate_dir(std::string const& dir, ds_t& d)
 {
     std::string cwd { dir };
     std::string ln;
     while(std::getline(std::cin, ln))
     {
         if(auto[m, s, n] = ctre::match<R"((\d+) (\H+))">(ln); m)
-            d[dir] += sv_to_t<uint64_t>(s);
+            d[dir] += sv_to_t<int>(s);
         else
         if(auto[m2, n2] = ctre::match<R"(\$ cd (\H+))">(ln); m2)
         {
@@ -42,7 +42,7 @@ auto get_input()
 
 auto pt1(auto const& in)
 {
-    return std::accumulate(in.begin(), in.end(), 0ULL, [](auto s, auto& r){if(r.second <= 100000) return s + r.second ; else return s;});
+    return std::accumulate(in.begin(), in.end(), 0, [](auto s, auto& r){if(r.second <= 100000) return s + r.second ; else return s;});
 }
 
 auto pt2(auto const& in)
