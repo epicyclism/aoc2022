@@ -7,7 +7,6 @@
 
 #include <ctre_inc.h>
 
-// durectory to total size contained
 using ds_t = std::map<std::string, uint64_t>;
 
 uint64_t enumerate_dir(std::string const& dir, ds_t& d)
@@ -16,12 +15,10 @@ uint64_t enumerate_dir(std::string const& dir, ds_t& d)
     std::string ln;
     while(std::getline(std::cin, ln))
     {
-        if(auto[m, s, n] = ctre::match<R"((\d+) (\H+))">(ln); m) // file listing
-        {
+        if(auto[m, s, n] = ctre::match<R"((\d+) (\H+))">(ln); m)
             d[dir] += sv_to_t<uint64_t>(s);
-        }
         else
-        if(auto[m2, n2] = ctre::match<R"(\$ cd (\H+))">(ln); m2) // change dir
+        if(auto[m2, n2] = ctre::match<R"(\$ cd (\H+))">(ln); m2)
         {
             auto arg {n2.view()};
             if(arg == "..")
@@ -30,17 +27,8 @@ uint64_t enumerate_dir(std::string const& dir, ds_t& d)
                 cwd += arg;
         }
         else
-        if(ctre::match<R"(\$ ls)">(ln)) // list
-        {
-            auto dd = enumerate_dir(cwd, d);
-            d[dir] += dd;
-        }
-        else
-        if(ctre::match<R"(dir (\H+))">(ln))
-        {
-        }
-        else
-            std::cout << "no match - " << ln << "\n";
+        if(ctre::match<R"(\$ ls)">(ln))
+            d[dir] += enumerate_dir(cwd, d);
     }
     return d[dir] ;
 }
@@ -61,11 +49,11 @@ auto pt2(auto const& in)
 {
     constexpr auto max      { 70000000ULL };
     constexpr auto free_min { 30000000ULL };
-    auto cur {in.at("/")};
-    auto max_min { free_min - (max - cur)};
-    auto dir_sz{cur};
+    const auto used {in.at("/")};
+    const auto to_free { free_min - (max - used)};
+    auto dir_sz{used};
     for(auto& d : in)
-        if( d.second > max_min && dir_sz > d.second)
+        if( d.second > to_free && dir_sz > d.second)
             dir_sz = d.second;
 
     return dir_sz;
