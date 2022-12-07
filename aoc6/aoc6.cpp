@@ -2,11 +2,8 @@
 #include <string>
 #include <array>
 #include <algorithm>
-#include <chrono>
 
-using namespace std::literals;
-
-// brute force (pt1 15us, pt2 50us)
+// brute force
 template<typename I> bool all_unique(I b, I e)
 {
     for(;b != e; ++b)
@@ -20,7 +17,6 @@ template<typename I> bool all_unique(I b, I e)
 
 template<size_t N> auto ptN(auto const& in)
 {
-//    auto now = std::chrono::high_resolution_clock().now();
     auto it0 = in.begin();
     auto itN = in.begin() + N;
     while(itN != in.end())
@@ -30,44 +26,31 @@ template<size_t N> auto ptN(auto const& in)
         ++it0;
         ++itN;
     }
-//    auto end = std::chrono::high_resolution_clock().now();
-//    std::cout << "duration " << std::chrono::duration_cast<std::chrono::microseconds>(end - now).count() << "us\n";
 
     return itN - in.begin();
 }
 
-// smart (pt1 5us, pt2 8us)
-template<size_t N> auto ptxN(auto const& in)
+// standard
+auto pt12(auto const& in)
 {
-//    auto now = std::chrono::high_resolution_clock().now();
-    std::array<unsigned, 256> seen{ 0 };
-    unsigned unique{ 0 };
-    std::for_each(in.begin(), in.begin() + N, [&](auto c)
-        {
-            ++seen[c];
-            if (seen[c] == 1)
-                ++unique;
-        });
-    auto it0 = in.begin();
-    auto itN = in.begin() + N;
-    if (unique != N)
+    int rv1{ 0 };
+    int rv2{ 0 };
+    std::array<int, 256> last{ -1 };
+    int left = 0;
+    for (int right = 0; right < in.size(); ++right)
     {
-        for (; itN != in.end(); ++it0, ++itN)
+        left = (std::max)(left, last[in[right]] + 1);
+        last[in[right]] = right;
+        if (rv1 == 0 && right - left + 1 == 4)
+            rv1 = right + 1;
+        if (rv2 == 0 && right - left + 1 == 14)
         {
-            --seen[*it0];
-            if (seen[*it0] == 0)
-                --unique;
-            ++seen[*itN];
-            if (seen[*itN] == 1)
-                ++unique;
-            if (unique == N)
-                break;
+            rv2 = right + 1;
+            break;
         }
     }
-//    auto end = std::chrono::high_resolution_clock().now();
-//    std::cout << "duration " << std::chrono::duration_cast<std::chrono::microseconds>(end - now).count() << "us\n";
 
-    return itN - in.begin() + 1;
+    return std::pair{ rv1, rv2 };
 }
 
 int main()
@@ -75,8 +58,9 @@ int main()
     std::string in;
     std::getline(std::cin, in);
  
-    std::cout << "pt1  = " << ptN<4>(in) << "\n";
-    std::cout << "pt2  = " << ptN<14>(in) << "\n";
-    std::cout << "ptx1 = " << ptxN<4>(in) << "\n";
-    std::cout << "ptx2 = " << ptxN<14>(in) << "\n";
+    std::cout << "pt1   = " << ptN<4>(in) << "\n";
+    std::cout << "pt2   = " << ptN<14>(in) << "\n";
+    auto p12{ pt12(in) };
+    std::cout << "pt121 = " << p12.first << "\n";
+    std::cout << "pt122 = " << p12.second << "\n";
 }
