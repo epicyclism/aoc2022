@@ -2,7 +2,9 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <set>
+#include <experimental/mdspan>
+
+namespace stdex = std::experimental;
 
 auto get_input()
 {
@@ -11,153 +13,93 @@ auto get_input()
     std::string ln;
     while(std::getline(std::cin, ln))
     {
-        if(stride == 0)
-            stride = ln.size();
-        std::transform(ln.begin(), ln.end(), std::back_inserter(data), [](auto c){return c - '0';});
+        stride = ln.size();
+        std::ranges::transform(ln, std::back_inserter(data), [](auto c){return c - '0';});
     }
     return std::pair(data, stride);
 }
 
-using uc = unsigned char;
-using seen_set = std::set<uint16_t>;
-
-bool seen(uc r, uc c, seen_set& ss)
+template<typename F> void proc_1(auto& mds, F f)
 {
-    uint16_t v { r << 8 | c};
-    if(ss.contains(v))
-        return true;
-    ss.insert(v);
-
-    return false;
+    char max_so_far { -1 };
+    for (int i = 0; i < mds.extent(0); ++i)
+    {
+        if (max_so_far < mds[i])
+            f(i);
+        if (mds[i] > max_so_far)
+            max_so_far = mds[i];
+    }
+    max_so_far = -1;
+    for (int i = mds.extent(0) - 1; i >= 0; --i)
+    {
+        if (max_so_far < mds[i])
+            f(i);
+        if (mds[i] > max_so_far)
+            max_so_far = mds[i];
+    }
 }
 
-auto pt1(auto const& in)
+auto pt1(auto in)
 {
-    auto stride { in.second};
-    auto& grid { in.first};
-    seen_set ss;
-    int cnt { 0 };
-    // rows
-    for(uc r = 0; r < stride; ++r)
+    stdex::mdspan md(in.first.data(), in.second, in.second);
+    std::vector<bool> ss(in.second * in.second);
+    for (int r = 0; r < md.extent(0); ++r)
     {
-        char max_so_far { -1 };
-        for(uc c = 0; c < stride; ++c)
-        {
-            auto val {grid[r*stride + c]};
-            if(max_so_far < val && !seen(r, c, ss))
-                ++cnt;
-            if(val > max_so_far)
-                max_so_far = val;
-        }
-    }
-    // rows reverse
-    for(uc r = 0; r < stride; ++r)
+        auto mds = stdex::submdspan(md, r, stdex::full_extent);
+          proc_1(mds, [&](auto c) {ss[r*in.second+c] = true; });
+  }
+    for (int c = 0; c < md.extent(1); ++c)
     {
-        char max_so_far { -1 };    
-        for(uc c = 0; c < stride; ++c)
-        {
-            uc col = stride - c - 1;
-            auto val {grid[r*stride + col]};
-            if(max_so_far < val  && !seen(r, col, ss))
-                ++cnt;
-            if(val > max_so_far)
-                max_so_far = val;
-        }
+        auto mds = stdex::submdspan(md, stdex::full_extent, c);
+        proc_1(mds, [&](auto r) {ss[r * in.second + c] = true; });
     }
-    // cols
-    for(uc c = 0; c < stride; ++c)
-    {
-        char max_so_far { -1 };
-        for(uc r = 0; r < stride; ++r)
-        {
-            auto val {grid[r*stride + c]};
-            if(max_so_far < val && !seen(r, c, ss))
-                ++cnt;
-            if(val > max_so_far)
-                max_so_far = val;
-        }
-    }
-    // cols reverse
-    for(uc c = 0; c < stride; ++c)
-    {
-        char max_so_far { -1 };
-        for(uc r = 0; r < stride; ++r)
-        {
-            uc row = stride - r - 1;
-            auto val {grid[row*stride + c]};
-            if(max_so_far < val  && !seen(row, c, ss))
-                ++cnt;
-            if(val > max_so_far)
-                max_so_far = val;
-        }
-    }
-    return cnt;
+    return std::ranges::count(ss, true);
 }
 
-int view_dist(auto& grid, auto stride, auto rr, auto cc)
+template<typename F> void proc_2(auto& mds, F f)
 {
-    auto t { grid[rr*stride + cc]};
-    // left
-    int l {0};
-    for(auto c = cc; c != 0; --c)
+    // for each tree with a view
+    for (int t = 1; t < mds.extent(0); ++t)
     {
-        auto cm = c - 1;
-        ++l;
-        if(grid[rr*stride + cm] >= t)
-            break;
-
+        // look 'left'
+        int v{ 0 };
+        auto h{ mds[t] };
+        for (auto c = t - 1; c >= 0; --c)
+        {
+            ++v;
+            if (mds[c] >= h)
+                break;
+        }
+        f(t, v);
+        v = 0;
+        // look 'right'
+        for (auto c = t + 1; c < mds.extent(0); ++c)
+        {
+            ++v;
+            if (mds[c] >= h)
+                break;
+        }
+        f(t, v);
     }
-    if(l == 0)
-        l = 1;
-    // right
-    int r {0};
-    for(auto c = cc + 1; c < stride; ++c)
-    {
-        ++r;        
-        if(grid[rr*stride + c] >= t)
-            break;
-    }
-    if(r == 0)
-        r = 1;
-    // up
-    int u{0};
-    for(auto r = rr; r != 0; --r)
-    {
-        ++u;
-        auto rm = r - 1;
-        if(grid[rm*stride + cc] >= t)
-            break;
-    }
-    if(u == 0)
-        u = 1;
-    // down
-    int d{0};
-    for(auto rt = rr + 1; rt < stride; ++rt)
-    {
-        ++d;
-        if(grid[rt*stride + cc] >= t)
-            break;
-    }
-    if(d == 0)
-        d = 1;
-
-    return u*d*l*r;
 }
 
 auto pt2(auto const& in)
 {
-    auto stride { in.second};
-    auto& grid { in.first};
+    stdex::mdspan md(in.first.data(), in.second, in.second);
+    std::vector<int> out(in.first.size(), 1);
+    stdex::mdspan mdo(out.data(), in.second, in.second);
+    for (int r = 1; r < md.extent(0) - 1; ++r)
+    {
+        auto mds = stdex::submdspan(md, r, stdex::full_extent);
+        proc_2(mds, [&mdo, r](auto c, auto v) {mdo(c, r) *= v; });
+    }
+    for (int c = 1; c < md.extent(1) - 1; ++c)
+    {
+        auto mds = stdex::submdspan(md, stdex::full_extent, c);
+        proc_2(mds, [&mdo, c](auto r, auto v) {mdo(c, r) *= v; });
+    }
 
-    int max_vd {0};
-    for(uc c = 1; c < stride - 1; ++c)
-        for(uc r = 1; r < stride - 1; ++r)
-        {
-            auto vd {view_dist(grid, stride, r, c)};
-            if(vd > max_vd)
-                max_vd = vd;
-        }
-    return max_vd;
+    return *std::ranges::max_element(out);
 }
 
 int main()
