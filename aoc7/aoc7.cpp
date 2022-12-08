@@ -1,7 +1,5 @@
 #include <iostream>
 #include <string>
-#include <vector>
-#include <algorithm>
 #include <numeric>
 #include <map>
 
@@ -47,8 +45,8 @@ auto pt1(auto const& in)
 
 auto pt2(auto const& in)
 {
-    constexpr auto max      { 70000000ULL };
-    constexpr auto free_min { 30000000ULL };
+    constexpr auto max      { 70000000 };
+    constexpr auto free_min { 30000000 };
     const auto used {in.at("/")};
     const auto to_free { free_min - (max - used)};
     auto dir_sz{used};
