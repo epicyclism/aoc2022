@@ -46,8 +46,8 @@ auto pt1(auto in)
     for (int r = 0; r < md.extent(0); ++r)
     {
         auto mds = stdex::submdspan(md, r, stdex::full_extent);
-          proc_1(mds, [&](auto c) {ss[r*in.second+c] = true; });
-  }
+        proc_1(mds, [&](auto c) {ss[r*in.second+c] = true; });
+    }
     for (int c = 0; c < md.extent(1); ++c)
     {
         auto mds = stdex::submdspan(md, stdex::full_extent, c);
@@ -98,7 +98,6 @@ auto pt2(auto const& in)
         auto mds = stdex::submdspan(md, stdex::full_extent, c);
         proc_2(mds, [&mdo, c](auto r, auto v) {mdo(c, r) *= v; });
     }
-
     return *std::ranges::max_element(out);
 }
 
