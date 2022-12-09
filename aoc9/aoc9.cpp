@@ -21,19 +21,15 @@ auto get_input()
         {
             case 'D':
                 step = { 0, -1 };
-                //in.emplace_back(0, -d);
                 break;
             case 'L':
                 step = { -1, 0 };
-                //in.emplace_back(-d, 0);
                 break;
             case 'R':
                 step = { 1, 0 };
-                //in.emplace_back(d, 0);
                 break;
             case 'U':
                 step = { 0, 1 };
-                //in.emplace_back(0, d);
                 break;
             default:
                 break; // NOT REACHED
@@ -44,120 +40,65 @@ auto get_input()
     return in;
 }
 
-int distance(pt_t H, pt_t T)
+pt_t follow(pt_t H, pt_t T, auto& sT, bool record)
 {
-    if( !(H.first == T.first || H.second == T.second))
-            return std::abs(H.first - T.first) + std::abs(H.second - T.second) - 1;
-    return std::abs(H.first - T.first) + std::abs(H.second - T.second);
-}
-
-pt_t simple_follow(pt_t H, pt_t T, auto& sT, bool record)
-{
-    if(H.first == T.first)
+    auto ax = std::abs(H.first - T.first);
+    auto ay = std::abs(H.second - T.second);
+    if (ax == 2)
     {
-        if(H.second > T.second)
-        {
-            while(T.second != H.second - 1)
-            {
-                ++T.second;
-                if(record)
-                    sT.insert(T);
-            }
-        }
+        if (H.first > T.first)
+            ++T.first;
         else
-        {
-            while(T.second != H.second + 1)
-            {
-                --T.second;
-                if(record)
-                    sT.insert(T);
-            }
-        }
+            --T.first;
+        if (ay == 1)
+            T.second = H.second;
     }
-    else
-    if(H.second == T.second)
+    if (ay == 2)
     {
-        if(H.first > T.first)
-        {
-            while(T.first != H.first - 1)
-            {
-                ++T.first;
-                if(record)
-                    sT.insert(T);
-            }
-        }
+        if (H.second > T.second)
+            ++T.second;
         else
-        {
-            while(T.first != H.first + 1)
-            {
-                --T.first;
-                if(record)
-                    sT.insert(T);
-            }
-        }
+            --T.second;
+        if (ax == 1)
+            T.first = H.first;
     }
-    else
-        std::cout << "Simple follow bug\n";
+    if (record)
+        sT.insert(T);
     return T;
 }
 
-void check0(pt_t F, pt_t T)
+void print(std::set<pt_t> const& sT)
 {
-    if (std::abs(F.first - T.first) > 1 || std::abs(F.second - T.second) > 1)
+    short xf{ 0 }, xt{ 0 };
+    short yf{ 0 }, yt{ 0 };
+    for (auto& p : sT)
     {
-        std::cout << "BOGUS0 step, (" << F.first << ", " << F.second << ") to (" << T.first << ", " << T.second << ")\n";
+        if (p.first < xf)
+            xf = p.first;
+        if (p.first > xt)
+            xt = p.first;
+        if (p.second < yf)
+            yf = p.second;
+        if (p.second > yt)
+            yt = p.second;
     }
-}
-void check1(pt_t F, pt_t T)
-{
-    if (std::abs(F.first - T.first) > 1 || std::abs(F.second - T.second) > 1)
-    {
-        std::cout << "BOGUS1 step, (" << F.first << ", " << F.second << ") to (" << T.first << ", " << T.second << ")\n";
-    }
-}
-void check2(pt_t F, pt_t T)
-{
-    if (std::abs(F.first - T.first) > 1 || std::abs(F.second - T.second) > 1)
-    {
-        std::cout << "BOGUS2 step, (" << F.first << ", " << F.second << ") to (" << T.first << ", " << T.second << ")\n";
-    }
-}
+    auto cols = xt - xf + 1;
+    auto rows = yt - yf + 1;
 
-pt_t follow(pt_t H, pt_t T, auto& sT, bool record)
-{
-    // tail has to move?
-    auto d = distance(H, T);
-//    std::cout << "d = " << d << "\n";
-    if (d < 2)
+    std::vector<char> printa(rows * cols, '.');
+    for (auto& p : sT)
     {
-        check0(H, T);
-        return T;
+        printa[p.first - xf + (p.second - yf) * cols] = '*';
     }
-    auto T0{ T };
-    if (!(H.first == T.first || H.second == T.second))
+    printa[-xf + -yf * cols] = 's';
+    std::cout << "\n";
+    auto it = printa.begin();
+    for (int n = 0; n < rows; ++n)
     {
-        if(std::abs(H.first - T.first) == 1)
-        {
-            T.first = H.first;
-            if(H.second > T.second)
-                ++T.second;
-            else
-                --T.second;
-        }
-        else
-        {
-            T.second = H.second;
-            if(H.first > T.first)
-                ++T.first;
-            else
-                --T.first;
-        }
-        if(record)
-            sT.insert(T);
+        std::copy(it, it + cols, std::ostream_iterator<char>(std::cout, ""));
+        std::cout << "\n";
+        it += cols;
     }
-    auto rT = simple_follow(H, T, sT, record);
-    check2(T, rT);
-    return rT;
 }
 
 auto pt1(auto const& in)
@@ -172,12 +113,9 @@ auto pt1(auto const& in)
         H.second += mv.second;
         T = follow(H, T, sT, true);
     }
-//    std::cout << "H (" << H.first << ", " << H.second << ")\n";
-//    std::cout << "T (" << T.first << ", " << T.second << ")\n";
     return sT.size();
 }
 
-// 2778, too high
 auto pt2(auto const& in)
 {
     std::set<pt_t> sT;
@@ -189,45 +127,7 @@ auto pt2(auto const& in)
         H2T[0].second += mv.second;
         for (int n = 1; n < H2T.size(); ++n)
             H2T[n] = follow(H2T[n - 1], H2T[n], sT, n == 9);
-        //        for(auto& p : H2T)
-        //            std::cout << "( " << p.first << ", " << p.second << "),";
-        //        std::cout << "\n";
-        //        std::cout << H2T[9].first << ", " << H2T[9].second << "\n";
     }
-    //    for (auto& p : sT)
-    //        std::cout << "( " << p.first << ", " << p.second << "),";
-    //    std::cout << "\n";
-    short xf{ 0 }, xt{ 0 };
-    short yf{ 0 }, yt{ 0 };
-    for (auto& p : sT)
-    {
-        if (p.first < xf)
-            xf = p.first;
-        if (p.first > xt)
-            xt = p.first;
-        if (p.second < yf)
-            yf = p.second;
-        if (p.second > yt)
-            yt = p.second;
-    }
- #if 0
-    auto cols = xt - xf + 1;
-    auto rows = yt - yf + 1;
- 
-    std::vector<char> print(rows * cols , '.');
-    for (auto& p : sT)
-    {
-        print[p.first - xf + (p.second - yf) * cols] = '*';
-    }
-    print[-xf + -yf * cols] = 's';
-    auto it = print.begin();
-    for (int n = 0; n < rows; ++n)
-    {
-        std::copy(it, it + cols, std::ostream_iterator<char>(std::cout, ""));
-        std::cout << "\n";
-        it += cols;
-    }
-#endif
     return sT.size();
 }
 
