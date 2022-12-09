@@ -137,6 +137,8 @@ auto pt1(auto const& in)
         H.second += mv.second;
         T = follow(H, T, sT, true);
     }
+    std::cout << "H (" << H.first << ", " << H.second << ")\n";
+    std::cout << "T (" << T.first << ", " << T.second << ")\n";
     return sT.size();
 }
 
