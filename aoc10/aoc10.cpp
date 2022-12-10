@@ -3,73 +3,49 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <algorithm>
+#include <numeric>
 
 #include <ctre_inc.h>
 
-using uc_t = std::pair<unsigned, int>;
-
 auto get_input()
 {
-    std::vector<uc_t> in;
+    std::vector<int> in;
     std::string ln;
+    in.emplace_back(1);
     while(std::getline(std::cin, ln))
     {
-        if(ln[0] == 'n')
-            in.emplace_back(1, 0);
-        else
-            in.emplace_back(2, sv_to_t<int>(std::string_view(ln.c_str() + 5)));
+        in.emplace_back(0);
+        if(ln[0] == 'a')
+            in.emplace_back(sv_to_t<int>(std::string_view(ln.c_str() + 5)));
     }
+    std::partial_sum(in.begin(), in.end(), in.begin());
     return in;
 }
 
 auto pt1(auto const& in)
 {
-    int rv { 0};
-    constexpr std::array tgts{20, 60, 100, 140, 180, 220};
-    int cycle {0};
-    int X {1};
-    int Xn{1};
-    auto ins { in.begin()};
-    auto tgt { tgts.begin()};
-    while(tgt != tgts.end())
-    {
-        while(cycle < *tgt)
-        {
-            X = Xn;
-            cycle += (*ins).first;
-            Xn = X + (*ins).second;
-            ++ins;
-        }
-        rv += (*tgt * X);
-        ++tgt;
-    }
-    return rv;
+    constexpr std::array tgts{20, 60, 100, 140, 180, 220}; // the nth cycle is at offset n-1...
+    return std::accumulate(tgts.begin(), tgts.end(), 0, [&](auto a, auto v){return a + v * in[v-1];});
 }
 
 auto pt2(auto const& in)
 {
     constexpr int sw { 40 };
     std::array <char, sw * 6> screen;
-    screen.fill('.');
-    int cycle {0};
-    int X {1};
-    for(auto ins : in)
-    {
-        for( int uc = 0; uc < ins.first; ++uc)
+    int c { 0 };
+    std::transform(screen.begin(), screen.end(), in.begin(), screen.begin(),
+        [&](auto s, auto x)
         {
-            auto hp = cycle % 40;
-            if(hp >= X - 1 && hp <= X + 1)
-                screen[cycle] = '#';
-            ++cycle;
-        }
-        X += ins.second;
-    }
-    auto oi = screen.begin();
-    while( oi != screen.end())
+            auto rc = (std::abs(c - x) < 2) ? '#' : '.';
+            if(++c == sw)
+                c = 0;
+             return rc;
+        });
+    for(auto oi = screen.begin(); oi != screen.end(); oi += sw)
     {
         std::copy(oi, oi + sw, std::ostream_iterator<char>(std::cout, ""));
         std::cout << "\n";
-        oi += sw;
     }
 }
 
