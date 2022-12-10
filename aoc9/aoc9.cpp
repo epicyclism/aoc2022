@@ -6,7 +6,8 @@
 #include <set>
 #include <ctre_inc.h>
 
-using pt_t = std::pair<short, short>;
+using pt_t = std::pair<int32_t, int32_t>;
+using set_t = std::set<pt_t>;
 
 auto get_input()
 {
@@ -67,7 +68,7 @@ pt_t follow(pt_t H, pt_t T, auto& sT, bool record)
     return T;
 }
 
-void print(std::set<pt_t> const& sT)
+void print(set_t const& sT)
 {
     short xf{ 0 }, xt{ 0 };
     short yf{ 0 }, yt{ 0 };
@@ -103,7 +104,7 @@ void print(std::set<pt_t> const& sT)
 
 auto pt1(auto const& in)
 {
-    std::set<pt_t> sT;
+    set_t sT;
     pt_t H{0, 0};
     pt_t T{0, 0};
     sT.insert(T);
@@ -118,7 +119,7 @@ auto pt1(auto const& in)
 
 auto pt2(auto const& in)
 {
-    std::set<pt_t> sT;
+    set_t sT;
     std::array<pt_t, 10> H2T{};
     sT.insert(H2T[9]);
     for (auto mv : in)
