@@ -72,15 +72,18 @@ auto bfs(G const& g, vertex_id_t id_from)
     while (!q.empty())
     {
         auto u = q.front(); q.pop();
-		visited[u] = true;
-        for (auto e : g[u])
+        if( !visited[u])
         {
-			if (!visited[e])
-			{
-                recorder.set_distance(e, u);
-                recorder.set_previous(e, u);
-				q.push(e);
-			}
+            visited[u] = true;
+            for (auto e : g[u])
+            {
+                if (!visited[e])
+                {
+                    recorder.set_distance(e, u);
+                    recorder.set_previous(e, u);
+                    q.push(e);
+                }
+            }
         }
     }
     return recorder.rv;
@@ -189,3 +192,39 @@ public:
     }
 };
 #endif
+
+// plain grid wrap for mazes etc.
+// provide a fn to determine whether a path exists from adjacent otherwise valid nodes.
+// fn of form bool V(T from, T to)
+//
+template<typename T, typename V> class grid
+{
+private:
+    const std::vector<T>& data_;
+    const size_t stride_;
+    const V vp_;
+public:
+    grid(std::vector<T> const& d, size_t s, V vp) : data_{ d }, stride_{s}, vp_{vp}
+    {}
+    std::vector<vertex_id_t> operator[](vertex_id_t v) const
+    {
+        std::vector<vertex_id_t> rv;
+        // left
+        if (v % stride_ != 0 && vp_(data_[v], data_[v - 1]))
+            rv.emplace_back(v - 1);
+        // right
+        if (v % stride_ != stride_ - 1 && vp_(data_[v], data_[v + 1]))
+            rv.emplace_back(v + 1);
+        // up
+        if (v > stride_ && vp_(data_[v], data_[v - stride_]))
+            rv.emplace_back(v - stride_);
+        // down
+        if (v < data_.size() - stride_ && vp_(data_[v], data_[v + stride_]))
+            rv.emplace_back(v + stride_);
+        return rv;
+    }
+    size_t size() const
+    {
+        return data_.size();
+    }
+};
