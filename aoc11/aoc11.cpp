@@ -139,7 +139,7 @@ auto pt2(auto in)
         round(in, [m = get_m(in)](auto i){ return i % m;});
     std::ranges::sort(in, [](auto& l, auto& r){ return l.inspected_ > r.inspected_;});
 
-    return int64_t(in[0].inspected_) * int64_t(in[1].inspected_);
+    return int64_t(in[0].inspected_) * in[1].inspected_;
 }
 
 
