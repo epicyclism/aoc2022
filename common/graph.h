@@ -86,6 +86,7 @@ auto bfs(G const& g, vertex_id_t id_from)
     return recorder.rv;
 }  
 
+#if 0
 template<typename G, typename W, bool previous = false> 
 requires graph_container<G> 
 auto dijkstra(G const& g, vertex_id_t from)
@@ -118,7 +119,7 @@ auto dijkstra(G const& g, vertex_id_t from)
 
     return recorder.rv;
 }
-
+#endif
 // helpers for adjacency lists
 template<typename AdjacencyList, typename... ARGS> 
 concept adjacency_list = requires (AdjacencyList g, ARGS... args)
@@ -144,7 +145,7 @@ void add_edge_undirected(G& g, vertex_id_t from, vertex_id_t to, ARGS... args )
     add_edge(g, from, to, args...);
     add_edge(g, to, from, args...);
 }
-
+#if 0
 // helper for grid of weights stored as a vector with a stride
 //
 template<typename W>
@@ -187,3 +188,4 @@ public:
         return data_.size();
     }
 };
+#endif

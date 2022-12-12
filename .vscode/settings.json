@@ -91,6 +91,8 @@
         "functional": "cpp",
         "source_location": "cpp",
         "stop_token": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "unordered_set": "cpp",
+        "*.ipp": "cpp"
     }
 }
