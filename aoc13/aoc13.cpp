@@ -1,3 +1,7 @@
+#define BOOST_JSON_HEADER_ONLY
+#define BOOST_JSON_STATIC_LINK
+#include <boost/json.hpp>
+
 #include <utility>
 #include <iostream>
 #include <string>
@@ -15,78 +19,42 @@ auto get_input()
     while (std::getline(std::cin, ln))
     {
         if(ln.empty())
+		{
             in.emplace_back(lnl, lnr);
-        else
+			lnl.clear();
+		}
+		else
         if(lnl.empty())
-            lnl.swap(ln);
+            lnl = ln;
         else
-            lnr.swap(ln);
+            lnr = ln;
     }
     in.emplace_back(lnl, lnr);
     return in;
 }
 
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-
-struct value : public std::variant<int, std::vector<value>>
+bool less_v_v(boost::json::value const& l, boost::json::value const& r)
 {
-	value(int n)
-	{
-		this->emplace<0>(n);
-	}
-	value(std::vector<value> const& vv)
-	{
-		this->emplace<1>(vv);
-	}
-};
-#if 1
-bool operator<(value const& lv, value const& rv)
-{
-#if 1
-	return std::visit(overloaded{
-				[](int l, int r) -> bool { return l < r; },
-				[](int l, std::vector<value> const& r) -> bool { return l < r[0]; },
-				[](std::vector<value> const& l, int r) -> bool { return l[0] < r; },
-				[](std::vector<value> const& l, std::vector<value> const& r) -> bool { return l < r; }
-		}, lv, rv);
-#else
-	return std::visit(lt_v_v, lv, rv);
-#endif
-}
-#endif
-
-template<typename T> std::pair<T, std::string_view> sv_to_t(std::string_view sv)
-{
-	T t{ 0 };
-	auto fcr = std::from_chars(sv.data(), sv.data() + sv.size(), t);
-	return { t, fcr.ptr};
-}
-
-std::pair<value, std::string_view> parse(std::string_view sv)
-{
-	if (sv.front() == '[')
-	{
-		std::vector<value> vr;
-		sv.remove_prefix(1);
-		while (sv.front() != ']')
-		{
-			auto [v, sv2] = parse(sv);
-			vr.push_back(v);
-			sv = sv2;
-		}
-		sv.remove_prefix(1);
-		return { vr, sv };
-	}
+	if(l.is_array() && r.is_array())
+		return std::lexicographical_compare(l.as_array().begin(), l.as_array().end(), r.as_array().begin(), r.as_array().end(), less_v_v);
+	if(l.is_array())
+		return less_v_v(l.as_array(), boost::json::value{r.as_int64()});
 	else
-		return sv_to_t<int>(sv);
+	if(r.is_array())
+		return less_v_v(boost::json::value{l.as_int64()}, r);
+	return l.as_int64 () < r.as_int64();
 }
 
 bool compare(std::pair<std::string, std::string> const& ss)
 {
-	auto vl = parse(ss.first).first;
-	auto vr = parse(ss.second).first;
-	auto b{ vl < vr };
+#if 1
+	auto vl = boost::json::parse(ss.first);
+	auto vr = boost::json::parse(ss.second);
+	auto b{ less_v_v(vl, vr )};
 	return b;
+#else
+	return false;
+#endif
 }
 
 auto pt1(auto const& in)
@@ -100,24 +68,25 @@ auto pt1(auto const& in)
 
 auto pt2(auto const& in)
 {
-	constexpr std::string_view p1{ "[[6]]" };
-	constexpr std::string_view p2{ "[[2]]" };
-	std::vector<std::pair<value, int>> vv;
-	vv.emplace_back(parse(p1).first, 0);
-	vv.emplace_back(parse(p2).first, 1);
+    std::string_view p1{ "[[6]]" };
+	std::string_view p2{ "[[2]]" };
+	std::vector<std::pair<boost::json::value, int>> vv;
+	vv.emplace_back(boost::json::parse(p1), 0);
+	vv.emplace_back(boost::json::parse(p2), 1);
 	for (auto& i : in)
 	{
-		vv.emplace_back(parse(i.first).first, -1);
-		vv.emplace_back(parse(i.second).first, -1);
+		vv.emplace_back(boost::json::parse(i.first), -1);
+		vv.emplace_back(boost::json::parse(i.second), -1);
 	}
-	std::ranges::sort(vv, [](auto& l, auto& r) {return l.first < r.first; });
-	auto pkt1 = std::ranges::find_if(vv, [](auto& p) { return p.second == 0; });
-	auto pkt2 = std::ranges::find_if(vv, [](auto& p) { return p.second == 1; });
+	std::sort(vv.begin(), vv.end(), [](auto& l, auto& r) {return less_v_v(l.first, r.first); });
+	auto pkt1 = std::find_if(vv.begin(), vv.end(), [](auto& p) { return p.second == 0; });
+	auto pkt2 = std::find_if(vv.begin(), vv.end(), [](auto& p) { return p.second == 1; });
 	return (std::distance(vv.begin(), pkt1) + 1) * (std::distance(vv.begin(), pkt2) + 1);
 }
 
 int main()
 {
+	std::cout << "v2\n";
     auto in {get_input()};
 
     std::cout << "pt1 = " << pt1(in) << "\n";
