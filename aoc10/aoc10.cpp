@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <array>
 #include <vector>
 #include <numeric>
 
@@ -30,7 +31,8 @@ auto pt2(auto const& in)
 {
     constexpr int sw { 40 };
     std::string screen ((sw + 1) * 6, '\n');
-    for(auto iti { in.begin()}, its{screen.begin()}; iti != in.end(); ++iti, ++its)
+    auto its{ screen.begin() };
+    for(auto iti { in.begin()}; iti != in.end(); ++iti, ++its)
     {
         auto col = std::distance(screen.begin(), its) % 41;
         if(col == 40) // flyback, takes no cycles...
