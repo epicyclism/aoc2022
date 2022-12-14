@@ -93,6 +93,9 @@
         "stop_token": "cpp",
         "cinttypes": "cpp",
         "unordered_set": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "any": "cpp",
+        "forward_list": "cpp",
+        "ranges": "cpp"
     }
 }
