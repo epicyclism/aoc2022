@@ -220,7 +220,7 @@ int main()
     }
     else
     {
-        std::cout << "pt1 = " << pt1<2000000>(in) << "\n";
+//        std::cout << "pt1 = " << pt1<2000000>(in) << "\n";
         std::cout << "pt2 = " << pt2_4m(in) << "\n";
     }
 }

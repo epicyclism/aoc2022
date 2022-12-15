@@ -8,6 +8,7 @@
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+using namespace nlohmann::literals;
 
 auto get_input()
 {
@@ -42,36 +43,10 @@ auto pt1(auto const& in)
 
 auto pt2(auto in)
 {
-#if 0
-    std::string_view p1{ "[[6]]" };
-	std::string_view p2{ "[[2]]" };
-
-	std::vector<std::pair<boost::json::value, int>> vv;
-	vv.emplace_back(boost::json::parse(p1), 0);
-	vv.emplace_back(boost::json::parse(p2), 1);
-	for (auto& i : in)
-	{
-		vv.emplace_back(boost::json::parse(i.first), -1);
-		vv.emplace_back(boost::json::parse(i.second), -1);
-	}
-	std::sort(vv.begin(), vv.end(), [](auto& l, auto& r) {return less_v_v(l.first, r.first); });
-	auto pkt1 = std::find_if(vv.begin(), vv.end(), [](auto& p) { return p.second == 0; });
-	auto pkt2 = std::find_if(vv.begin(), vv.end(), [](auto& p) { return p.second == 1; });
-	return (std::distance(vv.begin(), pkt1) + 1) * (std::distance(vv.begin(), pkt2) + 1);
-#else
-    auto jl = json("[[\"2\"]]");
-    auto jr = json("[[\"6\"]]");
-    int cl { 0};
-    int cr { 0};
-    for(auto& v : in)
-    {
-        if( jl < v)
-            ++cl;
-        if(jr < v)
-            ++cr;
-    }
-	return cl*(cr + 1);
-#endif
+    std::sort(in.begin(), in.end());
+    auto cl = std::distance(in.begin(), std::lower_bound(in.begin(), in.end(), json::parse("[[2]]")));
+    auto cr = std::distance(in.begin(), std::lower_bound(in.begin(), in.end(), json::parse("[[6]]")));
+	return (cl+1)*(cr + 2);
 }
 
 int main()
