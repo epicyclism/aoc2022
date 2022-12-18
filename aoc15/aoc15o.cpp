@@ -5,8 +5,11 @@
 #include <algorithm>
 #include <set>
 #include <bitset>
+#include <numbers>
 
 #include <ctre_inc.h>
+
+using namespace std::numbers;
 
 template<typename T> struct pt
 {
@@ -27,6 +30,12 @@ auto get_input()
         in.push_back({ { sv_to_t<int>(x1), sv_to_t<int>(y1) }, { sv_to_t<int>(x2), sv_to_t<int>(y2) } });
     }
     return in;
+}
+
+void print(auto const& in)
+{
+    for (auto& sb : in)
+        std::cout << sb.first.x_ << ", " << sb.first.y_ << " : " << sb.second.x_ << ", " << sb.second.y_ << "\n";
 }
 
 int manhattan_distance(pt_t const& f, pt_t const& t)
@@ -63,23 +72,56 @@ template<int R> auto pt1(auto const& in)
     return coverage.size();
 }
 
-struct sq_t
+auto pt2_20(auto const& in)
 {
-    pt_t tl_;
-    pt_t tr_;
-    pt_t bl_;
-    pt_t br_;
+    std::bitset<21 * 21> bs;
+    for (auto& sb : in)
+    {
+        auto s{ sb.first };
+        auto d{ manhattan_distance(sb.first, sb.second) };
+        for (auto y = 0; y <= d; ++y)
+        {
+            for (auto x = y - d; x <= d - y; ++x)
+            {
+                auto cx = s.x_ + x;
+                auto cy = s.y_ - y;
+                auto cy2 = s.y_ + y;
+                if (cx >= 0 && cx <= 20 && cy >= 0 && cy <= 20)
+                    bs.set(cy * 20 + cx);
+                if (cx >= 0 && cx <= 20 && cy2 >= 0 && cy2 <= 20)
+                    bs.set(cy2 * 20 + cx);
+            }
+        }
+    }
+    for (auto x = 0; x < 21; ++x)
+        for (auto y = 0; y < 21; ++y)
+            if (!bs.test(y * 20 + x))
+                return int64_t(x) * 4000000LL + y;
+
+    return 0LL;
+}
+
+template<typename T> struct sq
+{
+    pt<T> tl_;
+    pt<T> tr_;
+    pt<T> bl_;
+    pt<T> br_;
 };
 
-std::ostream& operator<<(std::ostream& os, pt_t& p )
+using sq_t = sq<int>;
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, sq<T>& sq )
 {
-    os << "(" << p.x_ << ", " << p.y_ << ")";
+    os << "[ " << sq.tl_ << ", " << sq.tr_ << " : " << sq.bl_ << ", " << sq.br_ << " ]";
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, sq_t& sq )
+template<typename T>
+std::ostream& operator<<(std::ostream& os, pt<T>& p )
 {
-    os << "[ " << sq.tl_ << ", " << sq.tr_ << " : " << sq.bl_ << ", " << sq.br_ << " ]";
+    os << "(" << p.x_ << ", " << p.y_ << ")";
     return os;
 }
 
@@ -87,25 +129,24 @@ bool is_inside(auto const& pt, auto const& sq)
 {
     return (pt.x_ >= sq.tl_.x_ && pt.x_ <= sq.tr_.x_ && pt.y_ >= sq.tl_.y_ && pt.y_ <= sq.br_.y_);
 }
-
-pt_t rotate(pt_t p)
+template<typename T, typename U> pt<T> rotate(pt<U> p)
 {
-    return { (p.x_ - p.y_), (p.x_ + p.y_)};
+    return { (p.x_ - p.y_) / sqrt2, (p.x_ + p.y_) / sqrt2 };
 }
 
 pt_t rotate_back(auto p)
 {
-    return { (p.x_ + p.y_ )/ 2, (-p.x_ + p.y_) / 2};
+    return { int((p.x_ + p.y_ + 0.5)/ sqrt2), int(( - p.x_ + p.y_ + 0.5) / sqrt2)};
 }
 
-sq_t rotate(sq_t sq)
+sq<double> rotate(sq_t sq)
 {
-    return { rotate(sq.tl_), rotate(sq.tr_), rotate(sq.bl_), rotate(sq.br_)};
+    return { rotate<double>(sq.tl_), rotate<double>(sq.tr_), rotate<double>(sq.bl_), rotate<double>(sq.br_)};
 }
 
-auto pt2(auto const& in)
+auto pt2_4m(auto const& in)
 {
-    std::vector<sq_t> sqv;
+    std::vector<sq<double>> sqv;
     for (auto& sb : in)
     {
         auto s{ sb.first };
@@ -114,8 +155,8 @@ auto pt2(auto const& in)
         sqv.emplace_back(rotate(sq));
     }
 
-    std::vector<int> xp;
-    std::vector<int> yp;
+    std::vector<double> xp;
+    std::vector<double> yp;
     for (auto& sqa : sqv)
     {
         xp.push_back(sqa.tl_.x_);
@@ -127,28 +168,28 @@ auto pt2(auto const& in)
     std::ranges::sort(yp);
     xp.erase(std::unique(xp.begin(), xp.end()), xp.end());
     yp.erase(std::unique(yp.begin(), yp.end()), yp.end());
-    std::vector<int> xpp;
-    std::vector<int> ypp;
+    std::vector<double> xpp;
+    std::vector<double> ypp;
     auto itb{ xp.begin() };
     auto itn{ itb + 1 };
     while (itn != xp.end())
     {
-        if (*itn - *itb < 3)
-            xpp.push_back(*itb + 1);
+        if (*itn - *itb < 1.42)
+            xpp.push_back(*itb + sqrt2/2.0);
         ++itb, ++itn;
     }
     itb =  yp.begin();
     itn =  itb + 1;
     while (itn != yp.end())
     {
-        if (*itn - *itb < 3)
-            ypp.push_back(*itb + 1);
+        if (*itn - *itb < 1.42)
+            ypp.push_back(*itb + sqrt2/2.0);
         ++itb, ++itn;
     }
     for(auto x : xpp)
         for (auto y : ypp)
         {
-            pt_t p{ x, y };
+            pt<double> p{ x, y };
             bool seen{ false };
             for (auto& sq : sqv)
             {
@@ -171,7 +212,15 @@ auto pt2(auto const& in)
 int main()
 {
     auto in {get_input()};
-    std::cout << "v1\n";
-//    std::cout << "pt1 = " << pt1<2000000>(in) << "\n";
-    std::cout << "pt2 = " << pt2(in) << "\n";
+
+    if (in.size() == 14)
+    {
+        std::cout << "pt1 = " << pt1<10>(in) << "\n";
+        std::cout << "pt2 = " << pt2_20(in) << "\n";
+    }
+    else
+    {
+//        std::cout << "pt1 = " << pt1<2000000>(in) << "\n";
+        std::cout << "pt2 = " << pt2_4m(in) << "\n";
+    }
 }

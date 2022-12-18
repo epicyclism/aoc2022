@@ -96,6 +96,7 @@
         "*.ipp": "cpp",
         "any": "cpp",
         "forward_list": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "filesystem": "cpp"
     }
 }
