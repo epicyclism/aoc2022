@@ -48,7 +48,7 @@ struct bp_state
 std::ostream& operator<<(std::ostream& o, bp_state const& bps)
 {
     o << "[" << bps.time_ << ", " << bps.n_o_r_ << ", " << bps.n_o_ << ", " << bps.n_c_r_ <<
-        ", " << bps.n_c_ << ", " << bps.n_ob_r_ << ", " << bps.n_ob_ << ", " << bps.n_g_r_ << ", " << bps.n_g_;
+        ", " << bps.n_c_ << ", " << bps.n_ob_r_ << ", " << bps.n_ob_ << ", " << bps.n_g_r_ << ", " << bps.n_g_ << "]";
     return o;
 }
 
@@ -61,45 +61,7 @@ int step(bp_t const& bp, bp_state bps)
         auto n_c_spend = bps.n_c_;
         auto n_ob_spend = bps.n_ob_;
 
-        bp_state bps_n{ bps.time_ - 1, bps.n_o_r_ , bps.n_o_ + bps.n_o_r_,
-                                     bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
-                                     bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
-                                     bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
-        auto mx_this = step(bp, bps_n);
-        if (mx_this > mx)
-            mx = mx_this;
-
-        if (n_o_spend > bp.ore_)
-        {
-            bp_state bps_n{ bps.time_ - 1, bps.n_o_r_ + 1, bps.n_o_ + bps.n_o_r_ - bp.ore_,
-                                                 bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
-                                                 bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
-                                                 bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
-            mx_this = step(bp, bps_n);
-            if (mx_this > mx)
-                mx = mx_this;
-        }
-        if (n_o_spend > bp.clay_)
-        {
-            bp_state bps_n{ bps.time_ - 1, bps.n_o_r_, bps.n_o_ + bps.n_o_r_ - bp.clay_,
-                                                 bps.n_c_r_ + 1, bps.n_c_ + bps.n_c_r_,
-                                                 bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
-                                                 bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
-            auto mx_this = step(bp, bps_n);
-            if (mx_this > mx)
-                mx = mx_this;
-        }
-        if (n_o_spend > bp.obs_ore_ && n_c_spend > bp.obs_clay_)
-        {
-            bp_state bps_n{ bps.time_ - 1, bps.n_o_r_, bps.n_o_ + bps.n_o_r_ - bp.obs_ore_,
-                                                bps.n_c_r_, bps.n_c_ + bps.n_c_r_ - bp.obs_clay_,
-                                                bps.n_ob_r_ + 1 , bps.n_ob_ + bps.n_ob_r_,
-                                                bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
-            auto mx_this = step(bp, bps_n);
-            if (mx_this > mx)
-                mx = mx_this;
-        }
-        if (n_o_spend > bp.geode_ore_ && n_ob_spend > bp.geode_obs_)
+        if (n_o_spend >= bp.geode_ore_ && n_ob_spend >= bp.geode_obs_)
         {
             bp_state bps_n{ bps.time_ - 1, bps.n_o_r_, bps.n_o_ + bps.n_o_r_ - bp.geode_ore_,
                                                 bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
@@ -109,10 +71,52 @@ int step(bp_t const& bp, bp_state bps)
             if (mx_this > mx)
                 mx = mx_this;
         }
+        else if (n_o_spend >= bp.obs_ore_ && n_c_spend >= bp.obs_clay_)
+        {
+            bp_state bps_n{ bps.time_ - 1, bps.n_o_r_, bps.n_o_ + bps.n_o_r_ - bp.obs_ore_,
+                                                bps.n_c_r_, bps.n_c_ + bps.n_c_r_ - bp.obs_clay_,
+                                                bps.n_ob_r_ + 1 , bps.n_ob_ + bps.n_ob_r_,
+                                                bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
+            auto mx_this = step(bp, bps_n);
+            if (mx_this > mx)
+                mx = mx_this;
+        }
+        else if (n_o_spend >= bp.clay_)
+        {
+            bp_state bps_n{ bps.time_ - 1, bps.n_o_r_, bps.n_o_ + bps.n_o_r_ - bp.clay_,
+                                                 bps.n_c_r_ + 1, bps.n_c_ + bps.n_c_r_,
+                                                 bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
+                                                 bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
+            auto mx_this = step(bp, bps_n);
+            if (mx_this > mx)
+                mx = mx_this;
+        }
+        else if (n_o_spend >= bp.ore_)
+        {
+            bp_state bps_n{ bps.time_ - 1, bps.n_o_r_ + 1, bps.n_o_ + bps.n_o_r_ - bp.ore_,
+                                                 bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
+                                                 bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
+                                                 bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
+            auto mx_this = step(bp, bps_n);
+            if (mx_this > mx)
+                mx = mx_this;
+        }
+        else
+        {
+            bp_state bps_n{ bps.time_ - 1, bps.n_o_r_ , bps.n_o_ + bps.n_o_r_,
+                                        bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
+                                        bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
+                                        bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
+            auto mx_this = step(bp, bps_n);
+            if (mx_this > mx)
+                mx = mx_this;
+        }
+
         return mx;
     }
-    if (bps.n_g_ > 0)
-        std::cout << "got " << bps.n_g_ << " geodes\n";
+//    std::cout << bps << "\n";
+//    if (bps.n_g_ > 0)
+//        std::cout << "got " << bps.n_g_ << " geodes\n";
     return bps.n_g_;
 }
 
