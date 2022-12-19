@@ -97,6 +97,8 @@
         "any": "cpp",
         "forward_list": "cpp",
         "ranges": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "future": "cpp",
+        "regex": "cpp"
     }
 }

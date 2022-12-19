@@ -72,17 +72,14 @@ auto bfs(G const& g, vertex_id_t id_from)
     while (!q.empty())
     {
         auto u = q.front(); q.pop();
-        if( !visited[u])
+        for (auto e : g[u])
         {
-            visited[u] = true;
-            for (auto e : g[u])
+            if (!visited[e])
             {
-                if (!visited[e])
-                {
-                    recorder.set_distance(e, u);
-                    recorder.set_previous(e, u);
-                    q.push(e);
-                }
+                visited[e] = true;
+                recorder.set_distance(e, u);
+                recorder.set_previous(e, u);
+                q.push(e);
             }
         }
     }
