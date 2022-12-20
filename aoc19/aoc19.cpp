@@ -86,6 +86,11 @@ int step(bp_t const& bp, bp_state bps)
         auto max_ore_r = std::max({bp.ore_, bp.clay_, bp.obs_ore_, bp.geode_ore_});
         auto max_clay_r = bp.obs_clay_;
         auto max_obs_r = bp.geode_obs_;
+
+        bool build_ore { bps.n_o_r_ * bps.time_ + bps.n_o_ <= bps.time_ * max_ore_r};
+        bool build_clay{ bps.n_c_r_ * bps.time_ + bps.n_c_ <= bps.time_ * max_clay_r};
+        bool build_obs { bps.n_ob_r_ * bps.time_ + bps.n_ob_ <= bps.time_ * max_obs_r};
+
         bool do_nothing{ true };
         if (n_o_spend >= bp.geode_ore_ && n_ob_spend >= bp.geode_obs_)
         {
@@ -98,7 +103,7 @@ int step(bp_t const& bp, bp_state bps)
                 mx = mx_this;
             do_nothing = false;
         }
-        if (n_o_spend >= bp.obs_ore_ && n_c_spend >= bp.obs_clay_ &&  bps.n_ob_r_ < max_obs_r)
+        if (n_o_spend >= bp.obs_ore_ && n_c_spend >= bp.obs_clay_ &&  build_obs)
         {
             bp_state bps_n{ bps.time_ - 1, bps.n_o_r_, bps.n_o_ + bps.n_o_r_ - bp.obs_ore_,
                                                 bps.n_c_r_, bps.n_c_ + bps.n_c_r_ - bp.obs_clay_,
@@ -109,7 +114,7 @@ int step(bp_t const& bp, bp_state bps)
                 mx = mx_this;
             do_nothing = false;
         }
-        if (n_o_spend >= bp.clay_ && bps.n_c_r_ < max_clay_r )
+        if (n_o_spend >= bp.clay_ && build_clay)
         {
             bp_state bps_n{ bps.time_ - 1, bps.n_o_r_, bps.n_o_ + bps.n_o_r_ - bp.clay_,
                                                 bps.n_c_r_ + 1, bps.n_c_ + bps.n_c_r_,
@@ -120,7 +125,7 @@ int step(bp_t const& bp, bp_state bps)
                 mx = mx_this;
             do_nothing = false;
         }
-        if (n_o_spend >= bp.ore_ && bps.n_o_r_ < max_ore_r)
+        if (n_o_spend >= bp.ore_ && build_ore)
         {
             bp_state bps_n{ bps.time_ - 1, bps.n_o_r_ + 1, bps.n_o_ + bps.n_o_r_ - bp.ore_,
                                                 bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
