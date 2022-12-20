@@ -75,12 +75,10 @@ std::ostream& operator<<(std::ostream& o, bp_state const& bps)
     return o;
 }
 
-int step(bp_t const& bp, bp_state bps, int& best)
+int step(bp_t const& bp, bp_state bps)
 {
     if (bps.time_)
     {
-        if( bps.time_ < 5 && bps.n_g_ + bps.time_ * bps.n_g_r_ < best)
-            return 0;
         int mx{ 0 };
         auto n_o_spend = bps.n_o_;
         auto n_c_spend = bps.n_c_;
@@ -88,16 +86,17 @@ int step(bp_t const& bp, bp_state bps, int& best)
         auto max_ore_r = std::max({bp.ore_, bp.clay_, bp.obs_ore_, bp.geode_ore_});
         auto max_clay_r = bp.obs_clay_;
         auto max_obs_r = bp.geode_obs_;
-
+        bool do_nothing{ true };
         if (n_o_spend >= bp.geode_ore_ && n_ob_spend >= bp.geode_obs_)
         {
             bp_state bps_n{ bps.time_ - 1, bps.n_o_r_, bps.n_o_ + bps.n_o_r_ - bp.geode_ore_,
                                                 bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
                                                 bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_ - bp.geode_obs_,
                                                 bps.n_g_r_ + 1, bps.n_g_ + bps.n_g_r_ };
-            auto mx_this = step(bp, bps_n, best);
+            auto mx_this = step(bp, bps_n);
             if (mx_this > mx)
                 mx = mx_this;
+            do_nothing = false;
         }
         if (n_o_spend >= bp.obs_ore_ && n_c_spend >= bp.obs_clay_ &&  bps.n_ob_r_ < max_obs_r)
         {
@@ -105,9 +104,10 @@ int step(bp_t const& bp, bp_state bps, int& best)
                                                 bps.n_c_r_, bps.n_c_ + bps.n_c_r_ - bp.obs_clay_,
                                                 bps.n_ob_r_ + 1 , bps.n_ob_ + bps.n_ob_r_,
                                                 bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
-            auto mx_this = step(bp, bps_n, best);
+            auto mx_this = step(bp, bps_n);
             if (mx_this > mx)
                 mx = mx_this;
+            do_nothing = false;
         }
         if (n_o_spend >= bp.clay_ && bps.n_c_r_ < max_clay_r )
         {
@@ -115,9 +115,10 @@ int step(bp_t const& bp, bp_state bps, int& best)
                                                 bps.n_c_r_ + 1, bps.n_c_ + bps.n_c_r_,
                                                 bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
                                                 bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
-            auto mx_this = step(bp, bps_n, best);
+            auto mx_this = step(bp, bps_n);
             if (mx_this > mx)
                 mx = mx_this;
+            do_nothing = false;
         }
         if (n_o_spend >= bp.ore_ && bps.n_o_r_ < max_ore_r)
         {
@@ -125,32 +126,31 @@ int step(bp_t const& bp, bp_state bps, int& best)
                                                 bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
                                                 bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
                                                 bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
-            auto mx_this = step(bp, bps_n, best);
+            auto mx_this = step(bp, bps_n);
             if (mx_this > mx)
                 mx = mx_this;
+            do_nothing = false;
         }
+        if(do_nothing)
         {
             bp_state bps_n{ bps.time_ - 1, bps.n_o_r_ , bps.n_o_ + bps.n_o_r_,
                                         bps.n_c_r_, bps.n_c_ + bps.n_c_r_,
                                         bps.n_ob_r_ , bps.n_ob_ + bps.n_ob_r_,
                                         bps.n_g_r_, bps.n_g_ + bps.n_g_r_ };
-            auto mx_this = step(bp, bps_n, best);
+            auto mx_this = step(bp, bps_n);
             if (mx_this > mx)
                 mx = mx_this;
         }
 
         return mx;
     }
-    if( best < bps.n_g_)
-        best = bps.n_g_;
     return bps.n_g_;
 }
 
 
 int proc_for_geodes(bp_t const& bp)
 {
-    int cache { 0 };
-    auto rv = step(bp, {}, cache);
+    auto rv = step(bp, {});
     return rv;
 }
 
@@ -170,16 +170,15 @@ auto pt1(auto const& in)
 
 int proc_for_geodes2(bp_t const& bp)
 {
-    int cache { 1 };
-    auto rv = step(bp, {32}, cache);
+    auto rv = step(bp, {32});
     return rv;
 }
 
 // 2700 too low
-//
+// 3510 correct
 auto pt2(auto const& in)
 {
-    int prd {0};
+    int prd {1};
     for( int n = 0; n < std::min(in.size(), size_t(3)); ++n)
     {
         auto mx { proc_for_geodes2(in[n])};
