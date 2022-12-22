@@ -51,7 +51,7 @@ auto get_input()
         else
             std::cout << "read error at " << ln << "\n";
     }
-    std::ranges::sort(in, [](auto& l, auto& r){return l.nm_ < r.nm_;});
+//    std::ranges::sort(in, [](auto& l, auto& r){return l.nm_ < r.nm_;});
 //    std::ranges::sort(in);
 
     return in;
@@ -73,21 +73,30 @@ int64_t proc(int64_t l, int64_t r, char op)
     return -1;
 }
 
-auto pt1(auto in)
+struct keys
 {
     std::map<std::string, size_t> names;
     std::multimap<std::string, size_t> left;
-    std::multimap<std::string, size_t> right;
+    std::multimap<std::string, size_t> right; 
+};
+
+keys pre_process(auto const& in)
+{
+    keys k;
     for(size_t i = 0; i < in.size(); ++i)
     {
-        names[in[i].nm_] = i;
+        k.names[in[i].nm_] = i;
         if(!in[i].l_.empty())
-            left.emplace(in[i].l_, i);
+            k.left.emplace(in[i].l_, i);
         if(!in[i].r_.empty())
-            right.emplace(in[i].r_, i);
+            k.right.emplace(in[i].r_, i);
     }
+    return k;
+}
 
-    auto ir = names["root"];
+void evaluate(keys const& k, auto& in)
+{
+    auto ir = (*k.names.find("root")).second;
     while(!in[ir].val_)
     {
         for(size_t i { 0 }; i < in.size(); ++i)
@@ -95,7 +104,7 @@ auto pt1(auto in)
             auto& ri = in[i];
             if(!ri.done_ && ri.val_)
             {
-                auto rngl { left.equal_range(ri.nm_)};
+                auto rngl { k.left.equal_range(ri.nm_)};
                 for(auto i {rngl.first}; i != rngl.second; ++i )
                 {
                     auto& rl = in[(*i).second];
@@ -105,7 +114,7 @@ auto pt1(auto in)
                         rl.val_ = proc(rl.lval_.value(), rl.rval_.value(), rl.op_);
                     }
                 }
-                auto rngr { right.equal_range(ri.nm_)};
+                auto rngr { k.right.equal_range(ri.nm_)};
                 for(auto i {rngr.first}; i != rngr.second; ++i )
                 {
                     auto& rr = in[(*i).second];
@@ -119,28 +128,27 @@ auto pt1(auto in)
             }
         }
     }
-    return in[ir].val_.value();
 }
 
-auto pt2(auto const& inc)
+auto pt1(keys const& k, auto const& in)
 {
-    std::map<std::string, size_t> names;
-    std::multimap<std::string, size_t> left;
-    std::multimap<std::string, size_t> right;
-    for(size_t i = 0; i < inc.size(); ++i)
-    {
-        names[inc[i].nm_] = i;
-        if(!inc[i].l_.empty())
-            left.emplace(inc[i].l_, i);
-        if(!inc[i].r_.empty())
-            right.emplace(inc[i].r_, i);
-    }
-
+    auto in_m{in};
+    auto ir = (*k.names.find("root")).second;
+    evaluate(k, in_m);
+    return in_m[ir].val_.value();
+}
+#if 0
+auto pt2(keys const& k, auto const& in)
+{
     auto ir = names["root"];
-    std::vector<monkey_t> in ;
-//    int64_t start {inc[names["humn"]].val_.value()};
-    int64_t start {3712643961852};
-    int64_t end { start};
+
+    int64_t start {0};
+    int64_t inc   {1000000000000};
+
+    while(in[ir].lval_.value() != in[ir].rval_.value())
+    {
+
+    }
     do
     {
         in.clear();
@@ -190,11 +198,12 @@ auto pt2(auto const& inc)
 
     return in[ir].val_.value();
 }
-
+#endif
 int main()
 {
     auto in {get_input()};
+    auto keys {pre_process(in)};
 
-    std::cout << "pt1 = " << pt1(in)<< "\n";
-    std::cout << "pt2 = " << pt2(in) << "\n";
+    std::cout << "pt1 = " << pt1(keys, in)<< "\n";
+//    std::cout << "pt2 = " << pt2(in) << "\n";
 }
