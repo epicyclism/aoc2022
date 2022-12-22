@@ -41,32 +41,18 @@ auto get_input()
     return std::pair{mz, pwd};
 }
 
-void report_maze(auto const& in)
-{
-    for(auto& mr : in)
-        std::cout << mr.tiles_ << "\n";
-    std::cout << "\n";
-}
-
-void report_input(auto const& in)
-{
-    for(auto& mr : in.first)
-        std::cout << mr.from_ << " - " << mr.to_ << " " << mr.tiles_ << "\n";
-    std::cout << "\n";
-    for(auto& c: in.second)
-        std::visit(overloaded{[](auto a){ std::cout << a << " " << "\n";}}, c); 
-}
-
 struct state
 {
     int row_;
     int col_;
     int d_;
+    auto  operator<=>(const state&) const = default;
+
 };
 
 bool valid(auto& mz, int row, int col)
 {
-    bool rb { mz[row].tiles_[col] != '#' && mz[row].tiles_[col] != ' '};
+    bool rb { mz[row].tiles_[col] == '.'};
     return rb;
 }
 
@@ -128,17 +114,9 @@ std::pair<state, bool>  move_right(auto& mz, state const& st)
     return {st, false};
 }
 
-auto get_c_for_dir(int d)
-{
-    constexpr char ad[]{">v<^"};
-    return ad[d];
-}
-
 state move(auto& mz, int n, state const& st)
 {
     auto str { st};
-    char c = get_c_for_dir(st.d_);
-    mz[st.row_].tiles_[st.col_] = c;
     for(auto cnt = 0; cnt < n; ++cnt)
     {
         std::pair<state, bool> rsb;
@@ -160,7 +138,6 @@ state move(auto& mz, int n, state const& st)
         if(!rsb.second)
             break;
         str = rsb.first;
-        mz[str.row_].tiles_[str.col_] = c;
     }
     return str;
 }
@@ -171,25 +148,19 @@ state turn(state const& st, char t)
     switch(t)
     {
         case 'L':
-            --d;
-            if(d < 0)
-                d = 3;
+            d += 3;
             break;
         case 'R':
             ++d;
-            if( d > 3)
-                d = 0;
             break;
         default:
             break;
     }
+    if( d > 3)
+        d -= 4;
     return {st.row_, st.col_, d};
 }
 
-// 150154 too high
-// 127226 too high
-// 13566 OK
-//
 auto pt1(auto const& in)
 {
     auto mz { in.first};
@@ -198,7 +169,6 @@ auto pt1(auto const& in)
     for(auto& c: in.second)
         std::visit(overloaded{[&](int n){ st = move(mz, n, st);},
                                 [&](char t){st = turn(st, t);}}, c); 
-//    report_maze(mz);
     return 1000 * (st.row_ + 1) + 4 * (st.col_ + 1) + st.d_;
 }
 
@@ -209,45 +179,44 @@ struct fold_t
     std::pair<int, int> row_col_orig_;
     std::pair<int, int> row_adj_;
     std::pair<int, int> col_adj_;
+    int dir_in_;
     int turn_to_;
 
-    constexpr fold_t (int rf1, int rf2, int cf1, int cf2, int rcr, int rcc, int ra1, int ra2, int ca1, int ca2, int t) :
-        row_from_{rf1, rf2}, col_from_{cf1, cf2}, row_col_orig_{rcr, rcc}, row_adj_{ra1, ra2},  col_adj_{ca1, ca2}, turn_to_{t}
+    constexpr fold_t (int rf1, int rf2, int cf1, int cf2, int rcr, int rcc, int ra1, int ra2, int ca1, int ca2, int tf, int tt) :
+        row_from_{rf1, rf2}, col_from_{cf1, cf2}, row_col_orig_{rcr, rcc}, row_adj_{ra1, ra2},  col_adj_{ca1, ca2}, dir_in_{tf}, turn_to_{tt}
     {}
 };
 
-constexpr fold_t folds[] = { {   0,   1,  50, 100, 150,   0,  0,  1,  0,  0, 0,}, // A->L
-                             {   0,   1, 100, 150, 199,   0,  0,  0,  0,  1, 3,}, // B->N
-                             {   0,  50, 149, 150, 149,  50, -1,  0,  0,  0, 2,}, // D->J
-                             {  49,  50, 100, 150,  50,  99,  0,  1,  0,  0, 2,}, // E->G
-                             {  50, 100,  50,  51,  50,   0,  0,  0,  1,  0, 1,}, // F->I
-                             {   0,  50,  50,  51, 149,   0, -1,  0,  0,  0, 0,}, // C->H
-                             { 150, 200,  49,  50, 149,  50,  1,  0,  0,  0, 0,}, // M->K
-                             { 150, 200,   0,   1,   0,  50,  0,  0,  1,  0, 1,}, // L->A
-                             { 199, 200,   0,  50,   0, 100,  0,  0,  0,  1, 1,}, // N->B
-                             { 100, 150,  49,  50,  49, 149, -1,  0,  0,  0, 2,}, // J->D
-                             {  50, 100,  99, 100,  49, 100,  0,  0,  1,  0, 3,}, // G->E
-                             { 100, 101,   0,  50,  50,  50,  0,  1,  0,  0, 0,}, // I->F
-                             { 100, 150,   0,   1,  49,  50, -1,  0,  0,  0, 0,}, // H->C
-                             { 149, 150,  50, 100, 150,  49,  1,  0,  0,  0, 0,}, // M->K
+constexpr fold_t folds[] =  {{   0,   1,  50, 100, 150,   0,  0,  1,  0,  0, 3, 0,}, // A->L
+                             {   0,   1, 100, 150, 199,   0,  0,  0,  0,  1, 3, 3,}, // B->N
+                             {   0,  50, 149, 150, 149,  99, -1,  0,  0,  0, 0, 2,}, // D->J
+                             {  49,  50, 100, 150,  50,  99,  0,  1,  0,  0, 1, 2,}, // E->G
+                             {  50, 100,  50,  51, 100,   0,  0,  0,  1,  0, 2, 1,}, // F->I
+                             {   0,  50,  50,  51, 149,   0, -1,  0,  0,  0, 2, 0,}, // C->H
+                             { 150, 200,  49,  50, 149,  50,  0,  0,  1,  0, 0, 3,}, // M->K
+                             { 150, 200,   0,   1,   0,  50,  0,  0,  1,  0, 2, 1,}, // L->A
+                             { 199, 200,   0,  50,   0, 100,  0,  0,  0,  1, 1, 1,}, // N->B
+                             { 100, 150,  99, 100,  49, 149, -1,  0,  0,  0, 0, 2,}, // J->D
+                             {  50, 100,  99, 100,  49, 100,  0,  0,  1,  0, 0, 3,}, // G->E
+                             { 100, 101,   0,  50,  50,  50,  0,  1,  0,  0, 3, 0,}, // I->F
+                             { 100, 150,   0,   1,  49,  50, -1,  0,  0,  0, 2, 0,}, // H->C
+                             { 149, 150,  50, 100, 150,  49,  0,  1,  0,  0, 1, 2,}, // K->M
 };
 
-//  0  4  8 12 16
-//  0  5 10 15 20
-constexpr fold_t foldy[] = { {   0,   1,   8,  12,   4,   3,  0,  0,  0, -1, 1,}, // A->D
-                             {   0,   4,   8,   9,   4,   4,  0,  0,  1,  0, 1,}, // B->E
-                             {   0,   4,  11,  12,   8,  15, -1,  0,  0,  0, 2,}, // C->L
-                             {   4,   8,   0,   1,  11,  15,  0,  0, -1,  0, 3,}, // F->N
-                             {   4,   8,  11,  12,   8,  15,  0,  0, -1,  0, 1,}, // G->K
-                             {   7,   8,   0,   4,  11,  11, -1,  0,  0,  0, 3,}, // H->M
-                             {   8,  12,   8,   9,   7,   7,  0,  0,  0, -1, 3,}, // J->I
-                             {   4,   5,   0,   4,   0,  11,  0,  0,  0, -1, 1,}, // D->A
-                             {   4,   5,   4,   8,   0,   8,  0,  1,  0,  0, 0,}, // E->B
-                             {   8,  12,  15,  16,   3,  11,  0,  0,  0, -1, 2,}, // L->C
-                             {  11,  12,  12,  16,   7,   0,  0, -1,  0,  0, 0,}, // N->F
-                             {   7,   8,  12,  16,   7,  11, -1,  0,  0,  0, 2,}, // K->G
-                             {  11,  12,   8,  12,   7,   3, -1,  0,  0,  0, 3,}, // M->H
-                             {   7,   8,   4,   8,   8,  11,  0, -1,  0,  0, 0,}, // I->J
+constexpr fold_t foldsx[] = { {   0,   1,   8,  12,   4,   3,  0,  0,  0, -1, 0, 1}, // A->D
+                             {   0,   4,   8,   9,   4,   4,  0,  0,  1,  0, 2, 1}, // B->E
+                             {   0,   4,  11,  12,   8,  15, -1,  0,  0,  0, 0, 2}, // C->L
+                             {   4,   8,   0,   1,  11,  15,  0,  0, -1,  0, 2, 3}, // F->N
+                             {   4,   8,  11,  12,   8,  15,  0,  0, -1,  0, 0, 1}, // G->K
+                             {   7,   8,   0,   4,  11,  11, -1,  0,  0,  0, 1, 3}, // H->M
+                             {   8,  12,   8,   9,   7,   7,  0,  0,  0, -1, 2, 3}, // J->I
+                             {   4,   5,   0,   4,   0,  11,  0,  0,  0, -1, 3, 1}, // D->A
+                             {   4,   5,   4,   8,   0,   8,  0,  1,  0,  0, 3, 0}, // E->B
+                             {   8,  12,  15,  16,   3,  11,  0,  0,  0, -1, 0, 2}, // L->C
+                             {  11,  12,  12,  16,   7,   0,  0, -1,  0,  0, 1, 0}, // N->F
+                             {   8,   9,  12,  16,   7,  11, -1,  0,  0,  0, 3, 2}, // K->G
+                             {  11,  12,   8,  12,   7,   3,  0,  0,  0, -1, 1, 3}, // M->H
+                             {   7,   8,   4,   8,   8,  11,  0, -1,  0,  0, 1, 0}, // I->J
 };
 
 std::pair<int, int> fold(int row, int col, fold_t const& f)
@@ -257,122 +226,65 @@ std::pair<int, int> fold(int row, int col, fold_t const& f)
     return { rf, cf };
 }
 
-void test_fold()
-{
-    // A->L
-    auto fAL{ fold(0, 65, folds[0]) };
-    std::cout << "A->L from 0, 65 to " << fAL.first << ", " << fAL.second << "\n";
-    // B->N
-    auto fBN{ fold(0, 127, folds[1]) };
-    std::cout << "B->N from 0, 127 to " << fBN.first << ", " << fBN.second << "\n";
-    // D->J
-    auto fDJ{ fold(13, 149, folds[2]) };
-    std::cout << "D->J from 13, 149 to " << fDJ.first << ", " << fDJ.second << "\n";
-    // E->G
-    auto fEG{ fold(49, 103, folds[3]) };
-    std::cout << "E->G from 49, 103 to " << fEG.first << ", " << fEG.second << "\n";
-    // F->I
-    auto fFI{ fold(53, 50, folds[4]) };
-    std::cout << "F->I from 53, 50 to " << fFI.first << ", " << fFI.second << "\n";
-    // C->H
-    auto fCH{ fold(37, 50, folds[5]) };
-    std::cout << "C->H from 37, 50 to " << fCH.first << ", " << fCH.second << "\n";
-    // L->A
-    auto fLA{ fold(fAL.first, fAL.second, folds[6]) };
-    std::cout << "L->A from " << fAL.first << ", " << fAL.second << " to " << fLA.first << ", " << fLA.second << "\n";
-    // N->B
-    auto fNB{ fold(fBN.first, fBN.second, folds[7]) };
-    std::cout << "N->B from " << fBN.first << ", " << fBN.second << " to " << fNB.first << ", " << fNB.second << "\n";
-    // J->D
-    auto fJD{ fold(fDJ.first, fDJ.second, folds[8]) };
-    std::cout << "J->D from " << fDJ.first << ", " << fDJ.second << " to " << fJD.first << ", " << fJD.second << "\n";
-    // G->E
-    auto fGE{ fold(fEG.first, fEG.second, folds[9]) };
-    std::cout << "G->E from " << fEG.first << ", " << fEG.second << " to " << fGE.first << ", " << fGE.second << "\n";
-    // I->F
-    auto fIF{ fold(fFI.first, fFI.second, folds[10]) };
-    std::cout << "I->F from " << fFI.first << ", " << fFI.second << " to " << fIF.first << ", " << fIF.second << "\n";
-    // H->C
-    auto fHC{ fold(fCH.first, fCH.second, folds[11]) };
-    std::cout << "H->C from " << fCH.first << ", " << fCH.second << " to " << fHC.first << ", " << fHC.second << "\n";
-}
-
-state fold_state(int row, int col)
+state fold_state(state const& st)
 {
     for (auto& f : folds)
     {
-        if (row >= f.row_from_.first && row < f.row_from_.second && col >= f.col_from_.first && col < f.col_from_.second)
+        if (st.d_ == f.dir_in_ && st.row_ >= f.row_from_.first && st.row_ < f.row_from_.second && st.col_ >= f.col_from_.first && st.col_ < f.col_from_.second)
         {
-            auto [r, c] = fold(row, col, f);
+            auto [r, c] = fold(st.row_, st.col_, f);
             return { r, c, f.turn_to_ };
         }
     }
-    std::cout << "bad fold " << row << ", " << col << "\n";
-    return { 0, 0, 0 };
+    return {st};
 }
 
-std::pair<state, bool> move_up2(auto& mz, state const& st)
+state move_up2(auto& mz, state const& st)
 {
-    auto rs{ st };
-    int row = st.row_;
-    --row;
-    if (!valid_row_for_col(mz, row, st.col_))
-    {
-        rs = fold_state(rs.row_, rs.col_);
-    }
-    else
-        rs.row_ = row;
+    auto rs = fold_state(st);
+    if( rs == st)
+        --rs.row_;
     if (valid(mz, rs.row_, rs.col_))
-        return { rs, true };
-    return { st, false };
+        return rs ;
+    return st;
 }
 
-std::pair<state, bool>  move_down2(auto& mz, state const& st)
+state move_down2(auto& mz, state const& st)
 {
-    auto rs{ st };
-    int row = st.row_;
-    ++row;
-    if (!valid_row_for_col(mz, row, st.col_))
-    {
-        rs = fold_state(rs.row_, rs.col_);
-    }
-    else
-        rs.row_ = row;
+    auto rs = fold_state(st);
+    if( rs == st)
+        ++rs.row_;
     if (valid(mz, rs.row_, rs.col_))
-        return { rs, true };
-    return { st, false };
+        return rs ;
+    return st;
 }
 
-std::pair<state, bool>  move_left2(auto& mz, state const& st)
+state move_left2(auto& mz, state const& st)
 {
-    auto rs{ st };
-    if (rs.col_ == mz[st.row_].from_)
-        rs = fold_state(st.row_, st.col_);
-    else
-        --rs.col_;
+    auto rs = fold_state(st);
+    if( rs == st)
+       --rs.col_;
     if (valid(mz, rs.row_, rs.col_))
-        return { rs, true };
-    return { st, false };
+        return rs;
+    return st;
 }
 
-std::pair<state, bool>  move_right2(auto& mz, state const& st)
+state move_right2(auto& mz, state const& st)
 {
-    auto rs{ st };
-    ++rs.col_;
-    if (rs.col_ == mz[st.row_].to_)
-        rs = fold_state(st.row_, st.col_);
+    auto rs = fold_state(st);
+    if( rs == st)
+        ++rs.col_;
     if (valid(mz, rs.row_, rs.col_))
-        return { rs, true };
-    return { st, false };
+        return rs;
+    return st;
 }
 
 state move2(auto& mz, int n, state const& st)
 {
     auto str{ st };
-    mz[st.row_].tiles_[st.col_] = get_c_for_dir(st.d_);
     for (auto cnt = 0; cnt < n; ++cnt)
     {
-        std::pair<state, bool> rsb;
+        state rsb;
         switch (str.d_)
         {
         case 0:
@@ -388,26 +300,23 @@ state move2(auto& mz, int n, state const& st)
             rsb = move_up2(mz, str);
             break;
         }
-        if (!rsb.second)
-            break;
-        str = rsb.first;
-        mz[str.row_].tiles_[str.col_] = get_c_for_dir(str.d_);
+        if( rsb == str)
+           break;
+        str = rsb;
     }
     return str;
 }
 
-// 151007 too high
-// 151024...
-//  99308 too high
 auto pt2(auto const& in)
 {
     auto mz{ in.first };
     auto& ds{ in.second };
     state st{ 0, static_cast<int>(mz[0].from_), 0 };
     for (auto& c : in.second)
+    {
         std::visit(overloaded{ [&](int n) { st = move2(mz, n, st); },
-                                [&](char t) {st = turn(st, t); } }, c);
-    report_maze(mz);
+                            [&](char t) {st = turn(st, t); }}, c);
+    }
     return 1000 * (st.row_ + 1) + 4 * (st.col_ + 1) + st.d_;
 }
 
@@ -417,5 +326,4 @@ int main()
 
     std::cout << "pt1 = " << pt1(in) << "\n";
     std::cout << "pt2 = " << pt2(in) << "\n";
-//    test_fold();
 }
