@@ -109,7 +109,7 @@ std::pair<state, bool>  move_left(auto& mz, state const& st)
 {
     int col = st.col_;
     if( col == mz[st.row_].from_)
-        col =  mz[st.row_].to_;
+        col =  mz[st.row_].to_ - 1;
     else
         --col;
     if(valid(mz, st.row_, col))
