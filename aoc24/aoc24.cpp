@@ -149,9 +149,9 @@ auto pt1(auto const& in)
                 stmp.insert({current - 1, time}); // left
             if(ar[current + 1] == '.')
                stmp.insert({current + 1, time}); // right
-            if(ar[current - a.w_] == '.')
+            if(current > a.w_ && ar[current - a.w_] == '.')
                stmp.insert({current - a.w_, time}); // up
-            if(ar[current + a.w_] == '.')
+            if(current < a.e_ && ar[current + a.w_] == '.')
                 stmp.insert({current + a.w_, time}); // down
         }
         s.swap(stmp);
@@ -176,17 +176,15 @@ auto pt2(auto const& in)
         std::set<std::pair<int, int>> stmp;
         for(auto const& p: s)
         {
-            std::cout << p.first << ", " << p.second << "\n";
             auto current = p.first;
             if(current == goals[g])
             {
-                std::cout << "reached " << goals[g] << " in " << p.second << "\n";
                 if( g == 2)
                     return p.second;
                 ++g;
                 stmp.clear();
                 stmp.insert({p});
-                continue;
+                goto next_goal;
             }
             if(ar[current] == '.')
                 stmp.insert({current, time}); // stay
@@ -199,6 +197,7 @@ auto pt2(auto const& in)
             if(current < a.e_ && ar[current + a.w_] == '.')
                 stmp.insert({current + a.w_, time}); // down
         }
+next_goal:
         s.swap(stmp);
         a.step();
         ar = a.render();
