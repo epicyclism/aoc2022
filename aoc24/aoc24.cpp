@@ -2,7 +2,8 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include <queue>
+#include <set>
+#include <array>
 #include <algorithm>
 
 #include <experimental/mdspan>
@@ -130,45 +131,80 @@ auto pt0(auto const& in)
 auto pt1(auto const& in)
 {
     auto a {in};
-    std::queue<std::pair<int, int>> q; // pos, time
+    std::set<std::pair<int, int>> s; // pos, time
+    std::vector<char> ar{a.render()};
+    s.insert({a.s_, 0});
     int time {0};
-    std::vector<char> ar;
-    q.push({a.s_, 0});
-    while(!q.empty())
+    while(1)
     {
-        auto u = q.front();
-        if(u.second == time)
+        std::set<std::pair<int, int>> stmp;
+        for(auto const& p: s)
         {
-            a.step();
-            ar = a.render();
-            std::cout << time << "\n" << a << "\n";
-            ++time;
-            if( time > 19)
-                break;
+            auto current = p.first;
+            if(current == a.e_)
+                return p.second;
+            if(ar[current] == '.')
+                stmp.insert({current, time}); // stay
+            if(ar[current - 1] == '.')
+                stmp.insert({current - 1, time}); // left
+            if(ar[current + 1] == '.')
+               stmp.insert({current + 1, time}); // right
+            if(ar[current - a.w_] == '.')
+               stmp.insert({current - a.w_, time}); // up
+            if(ar[current + a.w_] == '.')
+                stmp.insert({current + a.w_, time}); // down
         }
-        std::cout << u.first << ", " << u.second << "\n";
-        q.pop();
-        auto current = u.first;
-        if(current == a.e_)
-            break;
-        if(ar[current] != '.')
-            continue;
-        q.push({current, time}); // stay
-        if(ar[current - 1] == '.')
-            q.push({current - 1, time}); // left
-        if(ar[current + 1] == '.')
-            q.push({current + 1, time}); // right
-        if(ar[current - a.w_] == '.')
-            q.push({current - a.w_, time}); // up
-        if(ar[current + a.w_] == '.')
-            q.push({current + a.w_, time}); // down
-    }
-    return time;
+        s.swap(stmp);
+        a.step();
+        ar = a.render();
+        ++time;
+   }
+   return time;
 }
 
 auto pt2(auto const& in)
 {
-    return 0;
+    auto a {in};
+    std::set<std::pair<int, int>> s; // pos, time
+    std::vector<char> ar{a.render()};
+    s.insert({a.s_, 0});
+    int time {0};
+    std::array<size_t, 3> goals  {a.e_, a.s_, a.e_};
+    int g {0};
+    while(1)
+    {
+        std::set<std::pair<int, int>> stmp;
+        for(auto const& p: s)
+        {
+            std::cout << p.first << ", " << p.second << "\n";
+            auto current = p.first;
+            if(current == goals[g])
+            {
+                std::cout << "reached " << goals[g] << " in " << p.second << "\n";
+                if( g == 2)
+                    return p.second;
+                ++g;
+                stmp.clear();
+                stmp.insert({p});
+                continue;
+            }
+            if(ar[current] == '.')
+                stmp.insert({current, time}); // stay
+            if(ar[current - 1] == '.')
+                stmp.insert({current - 1, time}); // left
+            if(ar[current + 1] == '.')
+               stmp.insert({current + 1, time}); // right
+            if(current > a.w_ && ar[current - a.w_] == '.')
+               stmp.insert({current - a.w_, time}); // up
+            if(current < a.e_ && ar[current + a.w_] == '.')
+                stmp.insert({current + a.w_, time}); // down
+        }
+        s.swap(stmp);
+        a.step();
+        ar = a.render();
+        ++time;
+   }
+   return time;
 }
 
 int main()
