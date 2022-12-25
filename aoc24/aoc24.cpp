@@ -91,15 +91,6 @@ auto get_input()
     return a;
 }
 
-void dump(auto const& a)
-{
-    std::cout << "w = " << a.w_ << ", h = " << a.h_ << "\n";
-    std::cout << "s = " << a.s_ << ", e = " << a.e_ << "\n";
-    std::cout << a.b_.size() << " blizzards\n";
-    for(auto& b: a.b_)
-        std::cout << b.x_ << ", " << b.y_ << " : " << b.d_ << "\n";
-}
-
 std::ostream& operator<<( std::ostream& os, arena_t const& a)
 {
     auto ar { a.render()};
@@ -209,8 +200,6 @@ next_goal:
 int main()
 {
     auto in {get_input()};
-//    dump(in);
-//   pt0(in);
     std::cout << "pt1 = " << pt1(in)<< "\n";
     std::cout << "pt2 = " << pt2(in) << "\n";
 }
