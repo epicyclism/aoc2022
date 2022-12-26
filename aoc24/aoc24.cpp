@@ -6,10 +6,6 @@
 #include <array>
 #include <algorithm>
 
-#include <experimental/mdspan>
-
-namespace stdex = std::experimental;
-
 struct blizzard_t
 {
     int x_;
