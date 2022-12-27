@@ -2,7 +2,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include <set>
+#include <bitset>
 #include <array>
 #include <algorithm>
 
@@ -18,8 +18,8 @@ struct arena_t
     std::vector<blizzard_t> b_;
     size_t w_;
     size_t h_;
-    size_t s_;
-    size_t e_;
+    int s_;
+    int e_;
     void step()
     {
         for(auto& b: b_)
@@ -104,44 +104,34 @@ std::ostream& operator<<( std::ostream& os, arena_t const& a)
     return os;
 }
 
-auto pt0(auto const& in)
-{
-    auto a {in};
-    for(int n = 0; n < 19; ++n)
-    {
-        std::cout << n << "\n" << a << "\n";
-        a.step();
-    }
-    return 0;
-}
-
 auto pt1(auto const& in)
 {
     auto a {in};
-    std::set<std::pair<int, int>> s; // pos, time
+    std::bitset<4096> s;
     std::vector<char> ar{a.render()};
-    s.insert({a.s_, 0});
+    s.set(a.s_);
     int time {0};
     while(1)
     {
-        std::set<std::pair<int, int>> stmp;
-        for(auto const& p: s)
+        std::bitset<4096> stmp;
+        for(int p = 0; p < 4096; ++p)
         {
-            auto current = p.first;
-            if(current == a.e_)
-                return p.second;
-            if(ar[current] == '.')
-                stmp.insert({current, time}); // stay
-            if(ar[current - 1] == '.')
-                stmp.insert({current - 1, time}); // left
-            if(ar[current + 1] == '.')
-               stmp.insert({current + 1, time}); // right
-            if(current > a.w_ && ar[current - a.w_] == '.')
-               stmp.insert({current - a.w_, time}); // up
-            if(current < a.e_ && ar[current + a.w_] == '.')
-                stmp.insert({current + a.w_, time}); // down
+            if (!s.test(p))
+                continue;
+            if(p == a.e_)
+                return time - 1;
+            if(ar[p] == '.')
+                stmp.set(p); // stay
+            if(ar[p - 1] == '.')
+                stmp.set(p - 1); // left
+            if(ar[p + 1] == '.')
+               stmp.set(p + 1); // right
+            if(p > a.w_ && ar[p - a.w_] == '.')
+               stmp.set(p - a.w_); // up
+            if(p < a.e_ && ar[p + a.w_] == '.')
+                stmp.set(p + a.w_); // down
         }
-        s.swap(stmp);
+        s = stmp;
         a.step();
         ar = a.render();
         ++time;
@@ -152,40 +142,41 @@ auto pt1(auto const& in)
 auto pt2(auto const& in)
 {
     auto a {in};
-    std::set<std::pair<int, int>> s; // pos, time
+    std::bitset<4096> s; // pos, time
     std::vector<char> ar{a.render()};
-    s.insert({a.s_, 0});
+    s.set(a.s_);
     int time {0};
-    std::array<size_t, 3> goals  {a.e_, a.s_, a.e_};
+    std::array<int, 3> goals  {a.e_, a.s_, a.e_};
     int g {0};
     while(1)
     {
-        std::set<std::pair<int, int>> stmp;
-        for(auto const& p: s)
+        std::bitset<4096> stmp;
+        for(int p = 0; p < 4096; ++p)
         {
-            auto current = p.first;
-            if(current == goals[g])
+            if (!s.test(p))
+                continue;
+            if(p == goals[g])
             {
                 if( g == 2)
-                    return p.second;
+                    return time - 1;
                 ++g;
-                stmp.clear();
-                stmp.insert({p});
+                stmp.reset();
+                stmp.set(p);
                 goto next_goal;
             }
-            if(ar[current] == '.')
-                stmp.insert({current, time}); // stay
-            if(ar[current - 1] == '.')
-                stmp.insert({current - 1, time}); // left
-            if(ar[current + 1] == '.')
-               stmp.insert({current + 1, time}); // right
-            if(current > a.w_ && ar[current - a.w_] == '.')
-               stmp.insert({current - a.w_, time}); // up
-            if(current < a.e_ && ar[current + a.w_] == '.')
-                stmp.insert({current + a.w_, time}); // down
+            if(ar[p] == '.')
+                stmp.set(p); // stay
+            if(ar[p - 1] == '.')
+                stmp.set(p - 1); // left
+            if(ar[p + 1] == '.')
+               stmp.set(p + 1); // right
+            if(p > a.w_ && ar[p - a.w_] == '.')
+               stmp.set(p - a.w_); // up
+            if(p < a.e_ && ar[p + a.w_] == '.')
+                stmp.set(p + a.w_); // down
         }
 next_goal:
-        s.swap(stmp);
+        s = stmp;
         a.step();
         ar = a.render();
         ++time;
