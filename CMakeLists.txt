@@ -37,7 +37,7 @@ FetchContent_Declare( ctre
     )
 FetchContent_MakeAvailable(ctre)
 # uncomment when/if necessary!
-#find_package(Boost 1.80 REQUIRED)
+find_package(Boost 1.81 REQUIRED)
 find_package(mdspan CONFIG REQUIRED)
 find_path(SYSTEM_INCLUDE_DIR experimental/mdspan)
 include_directories(${SYSTEM_INCLUDE_DIR})

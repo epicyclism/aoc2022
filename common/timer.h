@@ -30,6 +30,6 @@ public:
 	~timer()
 	{
 		auto end = std::chrono::high_resolution_clock().now();
-		std::cout << "(" << v_ << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start_).count() << "ns)";
+		std::cout << "(" << v_ << ": " << std::chrono::duration_cast<std::chrono::microseconds>(end - start_).count() << "us)\n";
 	}
 };
