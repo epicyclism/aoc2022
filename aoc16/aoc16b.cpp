@@ -72,7 +72,7 @@ auto get_input()
         for(auto t = f + 1; t < vflow.size() + 1; ++t)
         {
             auto ed = boost::add_edge(f, t, gr);
-            pm_e[ed] = D[f][t];
+//            pm_e[ed] = D[f][t];
 //            boost::put(pm_e, ed, D[f][t]);
         }
     auto pm_v = boost::get(boost::vertex_flow_t(),gr);
