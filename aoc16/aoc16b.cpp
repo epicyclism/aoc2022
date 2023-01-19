@@ -33,9 +33,9 @@ vertex_id_t vertex_id_from_name(std::string_view nm)
 	return (*v.first).second;
 }
 
-int64_t get_bit(int n)
+int get_bit(int n)
 {
-    return 1LL << n;
+    return 1 << n;
 }
 
 auto get_input()
@@ -67,9 +67,18 @@ auto get_input()
     for(auto& vf : vflow)
         std::cout << vf.first << " = " << vf.second << "\n";
     graph_t gr(vflow.size() + 1);
+    auto pm_e = boost::get(boost::edge_weight_t(),gr);
     for(auto f = 0; f < vflow.size(); ++f)
         for(auto t = f + 1; t < vflow.size() + 1; ++t)
-            boost::add_edge(f, t, gr);
+        {
+            auto ed = boost::add_edge(f, t, gr);
+            pm_e[ed] = D[f][t];
+//            boost::put(pm_e, ed, D[f][t]);
+        }
+    auto pm_v = boost::get(boost::vertex_flow_t(),gr);
+    boost::put(pm_v, 0, 0);
+    for(auto f = 0; f < vflow.size(); ++f)
+        boost::put(pm_v, f + 1, vflow[f].second);
 
     constexpr char name[]= {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
     boost::print_vertices(gr, name);
@@ -77,6 +86,14 @@ auto get_input()
     boost::print_edges(gr, name);
     std::cout << "\n";
     return gr;
+}
+
+template<int N> void dfs_visit(graph_t const& g, vertex_id_t v, int visited, int& mx)
+{
+    for(auto[eb, ee] = boost::out_edges(v, g); eb != ee; ++eb)
+    {
+
+    }
 }
 
 auto pt1(auto const& g)
