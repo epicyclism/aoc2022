@@ -66,19 +66,18 @@ auto get_input()
     std::cout << "AA at " << vertex_id_from_name("AA") << "\n";
     for(auto& vf : vflow)
         std::cout << vf.first << " = " << vf.second << "\n";
-    graph_t gr(vflow.size() + 1);
-    auto pm_e = boost::get(boost::edge_weight_t(),gr);
-    for(auto f = 0; f < vflow.size(); ++f)
-        for(auto t = f + 1; t < vflow.size() + 1; ++t)
+    vflow.insert(vflow.begin(), { vertex_id_from_name("AA") , 0 });
+    graph_t gr(vflow.size());
+    for(auto f = 0; f < vflow.size() - 1; ++f)
+        for(auto t = f + 1; t < vflow.size(); ++t)
         {
-            auto ed = boost::add_edge(f, t, gr);
-//            pm_e[ed] = D[f][t];
-//            boost::put(pm_e, ed, D[f][t]);
+            auto d = D[vflow[f].first][vflow[t].first];
+            auto ed = boost::add_edge(f, t, d, gr);
         }
     auto pm_v = boost::get(boost::vertex_flow_t(),gr);
     boost::put(pm_v, 0, 0);
     for(auto f = 0; f < vflow.size(); ++f)
-        boost::put(pm_v, f + 1, vflow[f].second);
+        boost::put(pm_v, f, vflow[f].second);
 
     constexpr char name[]= {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
     boost::print_vertices(gr, name);
