@@ -63,9 +63,6 @@ auto get_input()
     auto wm {boost::make_static_property_map<typename graph1_t::edge_descriptor, int>(1)};
     boost::floyd_warshall_all_pairs_shortest_paths(g, D, boost::weight_map(wm));
 
-    std::cout << "AA at " << vertex_id_from_name("AA") << "\n";
-    for(auto& vf : vflow)
-        std::cout << vf.first << " = " << vf.second << "\n";
     vflow.insert(vflow.begin(), { vertex_id_from_name("AA") , 0 });
     graph_t gr(vflow.size());
     for(auto f = 0; f < vflow.size() - 1; ++f)
@@ -79,31 +76,51 @@ auto get_input()
     for(auto f = 0; f < vflow.size(); ++f)
         boost::put(pm_v, f, vflow[f].second);
 
-    constexpr char name[]= {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
-    boost::print_vertices(gr, name);
-    std::cout << "\n";
-    boost::print_edges(gr, name);
-    std::cout << "\n";
     return gr;
 }
 
-template<int N> void dfs_visit(graph_t const& g, vertex_id_t v, int visited, int& mx)
+template<int N, typename F> void dfs_visit(graph_t const& g, vertex_id_t v, int time, int visited, int flow, F f)
 {
-    for(auto[eb, ee] = boost::out_edges(v, g); eb != ee; ++eb)
+    flow += boost::get(boost::vertex_flow_t(), g, v) * (N - time - 1);
+    for(auto[e, ee] = boost::out_edges(v, g); e != ee; ++e)
     {
-
+        auto d = boost::get(boost::edge_weight_t(), g, *e);
+        auto vt = boost::target(*e, g);
+        if( time + d < N)
+        {
+            if(!(visited & get_bit(vt)))
+                dfs_visit<N>(g, vt, time + d + 1, visited | get_bit(vt), flow, f);
+        }
+        else
+            f(flow, visited);
     }
 }
 
 auto pt1(auto const& g)
 {
-    return 0;
+    int mx { 0 };
+    dfs_visit<31>(g, 0, 0, 0, 0, [&](int f, int){ if( f > mx) mx = f;});
+    return mx;
 }
 
 auto pt2(auto const& g)
 {
-    return 0;
-}
+    std::map<int64_t, int> mxs;
+    dfs_visit<27>(g, 0, 0, 0, 0, [&](int f, int v){ if(mxs[v] < f) mxs[v] = f;});
+    std::vector<std::pair<int, int>> cache;
+    for(auto const& mm: mxs)
+        cache.emplace_back(mm.second, mm.first);
+    int mx { 0 };
+    for(int i = 0; i < cache.size() - 1; ++i)
+        for(int j = i + 1; j < cache.size(); ++j)
+        {
+            if( !(cache[i].second & cache[j].second))
+                if( cache[i].first + cache[j].first > mx)
+                {
+                    mx = cache[i].first + cache[j].first;
+                }
+        }
+    return mx;}
 
 int main()
 {
