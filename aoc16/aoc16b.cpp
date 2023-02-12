@@ -1,30 +1,22 @@
 #include <iostream>
-#include <iomanip>
-
 #include <string>
 #include <vector>
 #include <map>
-#include <algorithm>
-#include <tuple>
 
 #include <ctre_inc.h>
 
 #include "boost/graph/graph_utility.hpp"
 #include "boost/property_map/property_map.hpp"
 #include "boost/graph/adjacency_list.hpp"
-#include "boost/graph/adjacency_matrix.hpp"
 #include "boost/graph/floyd_warshall_shortest.hpp"
 
-constexpr auto MAX_V { 64 };
 using vertex_id_t = unsigned long;
-using graph1_t = boost::adjacency_list < boost::vecS, boost::vecS, boost::directedS>;
+
 namespace boost
 {
     enum vertex_flow_t { vertex_flow };
     BOOST_INSTALL_PROPERTY(vertex, flow);
 }
-using graph_t = boost::adjacency_matrix<boost::undirectedS,
-    boost::property<boost::vertex_flow_t, int>, boost::property<boost::edge_weight_t, int>>;
 
 vertex_id_t vertex_id_from_name(std::string_view nm)
 {
@@ -33,15 +25,15 @@ vertex_id_t vertex_id_from_name(std::string_view nm)
 	return (*v.first).second;
 }
 
-int get_bit(int n)
-{
-    return 1 << n;
-}
+using graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS,
+    boost::property<boost::vertex_flow_t, int>, boost::property<boost::edge_weight_t, int>>;
 
 auto get_input()
 {
+    constexpr auto MAX_V { 64 };
     int D[MAX_V][MAX_V];
-    graph1_t g;
+    using input_graph_t = boost::adjacency_list < boost::vecS, boost::vecS, boost::directedS> ;
+    input_graph_t g;
     std::vector<std::pair<vertex_id_t, int>> vflow; // list of vertices that have flow, by id and flow rate
     std::string ln;
 
@@ -51,8 +43,8 @@ auto get_input()
         auto from_id { vertex_id_from_name(id)};
         if(auto flow_rate = sv_to_t<int>(rate); flow_rate)
             vflow.emplace_back(from_id, flow_rate);
-        std::string_view v { ln };
-        v.remove_prefix(std::distance(ln.begin(), m.end())) ;
+
+        std::string_view v { m.end(), ln.end()};
         for (auto i : ctre::range<R"(([A-Z]+))">(v))
         {
             auto to_id { vertex_id_from_name(i)};
@@ -60,7 +52,7 @@ auto get_input()
         }
     }
 
-    auto wm {boost::make_static_property_map<typename graph1_t::edge_descriptor, int>(1)};
+    auto wm {boost::make_static_property_map<typename input_graph_t::edge_descriptor, int>(1)};
     boost::floyd_warshall_all_pairs_shortest_paths(g, D, boost::weight_map(wm));
 
     vflow.insert(vflow.begin(), { vertex_id_from_name("AA") , 0 });
@@ -79,17 +71,27 @@ auto get_input()
     return gr;
 }
 
+bool is_visited(int visited, vertex_id_t v)
+{
+    return visited & ( 1 << v);
+}
+
+int mark_visited(int visited, vertex_id_t v)
+{
+    return visited | (1 << v);
+}
+
 template<int N, typename F> void dfs_visit(graph_t const& g, vertex_id_t v, int time, int visited, int flow, F f)
 {
-    flow += boost::get(boost::vertex_flow_t(), g, v) * (N - time - 1);
+    flow += boost::get(boost::vertex_flow_t(), g, v) * (N - time /*- 1*/);
     for(auto[e, ee] = boost::out_edges(v, g); e != ee; ++e)
     {
         auto d = boost::get(boost::edge_weight_t(), g, *e);
         auto vt = boost::target(*e, g);
-        if( time + d < N)
+        if( time + d <= N)
         {
-            if(!(visited & get_bit(vt)))
-                dfs_visit<N>(g, vt, time + d + 1, visited | get_bit(vt), flow, f);
+            if(!is_visited(visited, vt))
+                dfs_visit<N>(g, vt, time + d + 1, mark_visited(visited, vt), flow, f);
         }
         else
             f(flow, visited);
@@ -99,14 +101,14 @@ template<int N, typename F> void dfs_visit(graph_t const& g, vertex_id_t v, int 
 auto pt1(auto const& g)
 {
     int mx { 0 };
-    dfs_visit<31>(g, 0, 0, 0, 0, [&](int f, int){ if( f > mx) mx = f;});
+    dfs_visit<30>(g, 0, 0, 0, 0, [&](int f, int){ if( f > mx) mx = f;});
     return mx;
 }
 
 auto pt2(auto const& g)
 {
-    std::map<int64_t, int> mxs;
-    dfs_visit<27>(g, 0, 0, 0, 0, [&](int f, int v){ if(mxs[v] < f) mxs[v] = f;});
+    std::map<int, int> mxs;
+    dfs_visit<26>(g, 0, 0, 0, 0, [&](int f, int v){ if(mxs[v] < f) mxs[v] = f;});
     std::vector<std::pair<int, int>> cache;
     for(auto const& mm: mxs)
         cache.emplace_back(mm.second, mm.first);
@@ -120,7 +122,8 @@ auto pt2(auto const& g)
                     mx = cache[i].first + cache[j].first;
                 }
         }
-    return mx;}
+    return mx;
+}
 
 int main()
 {
