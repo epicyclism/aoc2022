@@ -83,7 +83,7 @@ int mark_visited(int visited, vertex_id_t v)
 
 template<int N, typename F> void dfs_visit(graph_t const& g, vertex_id_t v, int time, int visited, int flow, F f)
 {
-    flow += boost::get(boost::vertex_flow_t(), g, v) * (N - time /*- 1*/);
+    flow += boost::get(boost::vertex_flow_t(), g, v) * (N - time);
     for(auto[e, ee] = boost::out_edges(v, g); e != ee; ++e)
     {
         auto d = boost::get(boost::edge_weight_t(), g, *e);
@@ -125,10 +125,25 @@ auto pt2(auto const& g)
     return mx;
 }
 
+void print(graph_t& g)
+{
+    for (auto [v, vv] = boost::vertices(g); v != vv; ++v)
+    {
+        std::cout << *v << " (" << boost::get(boost::vertex_flow_t(), g, *v) << ") : ";
+        for (auto [e, ee] = boost::out_edges(*v, g); e != ee; ++e)
+        {
+            auto d = boost::get(boost::edge_weight_t(), g, *e);
+            auto vt = boost::target(*e, g);
+            std::cout << vt << " (" << d << "), ";
+        }
+        std::cout << "\n";
+    }
+}
+
 int main()
 {
     auto g {get_input()};
-
+    print(g);
     std::cout << "pt1 = " << pt1(g) << "\n";
     std::cout << "pt2 = " << pt2(g) << "\n";
 }

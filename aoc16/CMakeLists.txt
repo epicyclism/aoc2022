@@ -12,3 +12,5 @@ target_link_libraries(aoc16b PRIVATE ctre::ctre)
 add_executable(aoc16o aoc16o.cpp)
 target_include_directories(aoc16o PUBLIC ../common)
 target_link_libraries(aoc16o PRIVATE ctre::ctre)
+
+add_executable(aoc16_reddit aoc16_reddit.cpp)
