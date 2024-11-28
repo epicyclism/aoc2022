@@ -96,6 +96,8 @@ keys pre_process(auto const& in)
 
 void evaluate(keys const& k, auto& in)
 {
+    int mx{ 0 };
+    int cnt{ 0 };
     auto ir = (*k.names.find("root")).second;
     while(!in[ir].val_)
     {
@@ -104,6 +106,7 @@ void evaluate(keys const& k, auto& in)
             auto& ri = in[i];
             if(!ri.done_ && ri.val_)
             {
+                cnt = 0;
                 auto rngl { k.left.equal_range(ri.nm_)};
                 for(auto i {rngl.first}; i != rngl.second; ++i )
                 {
@@ -113,7 +116,11 @@ void evaluate(keys const& k, auto& in)
                     {
                         rl.val_ = proc(rl.lval_.value(), rl.rval_.value(), rl.op_);
                     }
+                    ++cnt;
                 }
+                if (cnt > mx)
+                    mx = cnt;
+                cnt = 0;
                 auto rngr { k.right.equal_range(ri.nm_)};
                 for(auto i {rngr.first}; i != rngr.second; ++i )
                 {
@@ -123,11 +130,15 @@ void evaluate(keys const& k, auto& in)
                     {
                         rr.val_ = proc(rr.lval_.value(), rr.rval_.value(), rr.op_);
                     }
+                    ++cnt;
                 }
+                if (cnt > mx)
+                    mx = cnt;
                 ri.done_ = true;
             }
         }
     }
+    std::cout << mx << "\n";
 }
 
 auto pt1(keys const& k, auto const& in)
@@ -140,20 +151,16 @@ auto pt1(keys const& k, auto const& in)
 #if 0
 auto pt2(keys const& k, auto const& in)
 {
-    auto ir = names["root"];
+    auto ir = k.names["root"];
 
     int64_t start {0};
     int64_t inc   {1000000000000};
 
-    while(in[ir].lval_.value() != in[ir].rval_.value())
-    {
-
-    }
     do
     {
         in.clear();
         in.insert(in.begin(), inc.begin(), inc.end() );
-        in[names["humn"]].val_ = start;
+        in[k->names["humn"]].val_ = start;
 
         while(!in[ir].val_)
         {
@@ -162,7 +169,7 @@ auto pt2(keys const& k, auto const& in)
                 auto& ri = in[i];
                 if(!ri.done_ && ri.val_)
                 {
-                    auto rngl { left.equal_range(ri.nm_)};
+                    auto rngl { k->left.equal_range(ri.nm_)};
                     for(auto i {rngl.first}; i != rngl.second; ++i )
                     {
                         auto& rl = in[(*i).second];
@@ -172,7 +179,7 @@ auto pt2(keys const& k, auto const& in)
                             rl.val_ = proc(rl.lval_.value(), rl.rval_.value(), rl.op_);
                         }
                     }
-                    auto rngr { right.equal_range(ri.nm_)};
+                    auto rngr{ k->right.equal_range(ri.nm_) };
                     for(auto i {rngr.first}; i != rngr.second; ++i )
                     {
                         auto& rr = in[(*i).second];
@@ -205,5 +212,5 @@ int main()
     auto keys {pre_process(in)};
 
     std::cout << "pt1 = " << pt1(keys, in)<< "\n";
-//    std::cout << "pt2 = " << pt2(in) << "\n";
+//    std::cout << "pt2 = " << pt2(keys, in) << "\n";
 }
