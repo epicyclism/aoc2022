@@ -136,7 +136,7 @@ bool getbit(uint64_t n, unsigned b)
 
 uint64_t set_bit(uint64_t n, unsigned b)
 {
-	unsigned bb{ 1ULL << b };
+	uint64_t bb{ 1ULL << b };
 	return n | bb;
 }
 

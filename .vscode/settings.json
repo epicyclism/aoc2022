@@ -99,6 +99,9 @@
         "ranges": "cpp",
         "filesystem": "cpp",
         "future": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "__verbose_abort": "cpp",
+        "execution": "cpp",
+        "print": "cpp"
     }
 }
